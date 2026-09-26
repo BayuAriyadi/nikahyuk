@@ -1,0 +1,530 @@
+/*
+ * Template undangan: palet warna + layout per template.
+ *
+ * Warna: Tailwind 4 mengemit utility sebagai `var(--color-rose-700)` dsb.,
+ * jadi seluruh halaman publik berganti warna hanya dengan menimpa variabel
+ * itu di bawah atribut `data-template`. Halaman publik membungkus dirinya
+ * dengan `data-template={templateName}` (lihat PublicInvitation.jsx).
+ *
+ * Layout: elemen struktural ditandai hook `ny-*` (ny-title, ny-card,
+ * ny-cover, ny-cover-inner, ny-frame, ny-gallery, ny-countdown, ny-divider,
+ * ny-story). Blok di bawah mengubah bentuk/penjajaran tiap template dari
+ * hook yang sama, jadi tidak ada komponen React yang diduplikasi.
+ *
+ * Catatan cascade: blok ini tidak memakai @layer, jadi letaknya di atas
+ * utility Tailwind (yang hidup di dalam layer) dan boleh menimpa utility.
+ *
+ * Setiap warna wajib lolos kontras WCAG AA pada latarnya (teks kecil
+ * >= 4.5:1, grafik >= 3:1). Nilai oklch di bawah sudah lewat audit kontras.
+ */
+
+/* ===== Klasik: blush rose, serif, kartu membulat, hover naik =====
+ * rose-300/400/500 disetel ulang: skala Tailwind bawaan (0,81/0,71/0,645)
+ * hanya mencapai 1,96-3,76:1 di atas putih, di bawah ambang AA (grafik 3:1,
+ * teks 4,5:1). Nilai di bawah hasil hitung ulang L pada C/H yang sama. */
+[data-template='klasik'] {
+  --color-rose-50: oklch(96.9% 0.015 12.422);
+  --color-rose-100: oklch(94.1% 0.03 12.58);
+  --color-rose-200: oklch(89.2% 0.058 10.001);
+  --color-rose-300: oklch(68.4% 0.117 11.638);
+  --color-rose-400: oklch(68.8% 0.194 13.428);
+  --color-rose-500: oklch(59.3% 0.246 16.439);
+  --color-rose-600: oklch(58.6% 0.253 17.585);
+  --color-rose-700: oklch(51.4% 0.222 16.935);
+  --color-rose-800: oklch(45.5% 0.188 13.697);
+  --color-rose-900: oklch(41% 0.159 10.272);
+}
+
+/* ===== Minimalis: netral arang, rata kiri, tajam, glow pointer =====
+ * rose-300/400/500 disetel ulang agar ornamen (garis, titik timeline) dan
+ * ikon mencapai ambang AA; skala slate bawaan hanya 1,87-4,77:1 di putih. */
+[data-template='minimalis'] {
+  --color-rose-50: oklch(98.4% 0.003 247.858);
+  --color-rose-100: oklch(96.8% 0.007 247.896);
+  --color-rose-200: oklch(92.9% 0.013 255.508);
+  --color-rose-300: oklch(66.3% 0.022 252.894);
+  --color-rose-400: oklch(66.9% 0.04 256.788);
+  --color-rose-500: oklch(56.8% 0.046 257.417);
+  --color-rose-600: oklch(44.6% 0.043 257.281);
+  --color-rose-700: oklch(37.2% 0.044 257.287);
+  --color-rose-800: oklch(27.9% 0.041 260.031);
+  --color-rose-900: oklch(20.8% 0.042 265.755);
+}
+
+/* ===== Floral: sage hijau, lembut, foto melengkung =====
+ * rose-300..900 disetel ulang ke ambang AA (skala hijau bawaan hanya
+ * 1,89-4,94:1 di putih). Ramp dijaga tetap menaik terang->gelap. */
+[data-template='floral'] {
+  --color-rose-50: oklch(98.2% 0.018 155.826);
+  --color-rose-100: oklch(96.2% 0.044 156.743);
+  --color-rose-200: oklch(92.5% 0.084 155.995);
+  --color-rose-300: oklch(65.2% 0.15 154.449);
+  --color-rose-400: oklch(63.2% 0.209 151.711);
+  --color-rose-500: oklch(52.8% 0.219 149.579);
+  --color-rose-600: oklch(53.4% 0.194 149.214);
+  --color-rose-700: oklch(50% 0.154 150.069);
+  --color-rose-800: oklch(44.8% 0.119 151.328);
+  --color-rose-900: oklch(39.3% 0.095 152.535);
+}
+
+/* ===== Ceria: tinta marun, tulisan tangan, ornamen coretan =====
+ * Palet dari referensi undangan "art anak-anak": latar krem hangat, tinta
+ * marun tua, aksen zaitun. rose-300..900 disetel ulang supaya lolos kontras
+ * AA (teks kecil >= 4.5:1, garis/ikon >= 3:1) di atas krem, bukan di atas
+ * putih. Ornamen digambar dengan mask SVG (data URI) supaya satu blok CSS
+ * menangani semua bentuk tanpa komponen React baru. */
+[data-template='ceria'] {
+  --color-rose-50: oklch(97.4% 0.014 84.583);
+  --color-rose-100: oklch(94.7% 0.028 83.7);
+  --color-rose-200: oklch(89.4% 0.05 82.4);
+  --color-rose-300: oklch(66.1% 0.104 36.2);
+  --color-rose-400: oklch(57.4% 0.132 28.6);
+  --color-rose-500: oklch(48.6% 0.132 24.1);
+  --color-rose-600: oklch(42.1% 0.121 22.4);
+  --color-rose-700: oklch(36.3% 0.104 21.2);
+  --color-rose-800: oklch(30.5% 0.086 20.4);
+  --color-rose-900: oklch(25.1% 0.07 19.8);
+  --ceria-ink: oklch(30.5% 0.086 20.4);
+  --ceria-font-hand: 'Caveat', 'Gloria Hallelujah', cursive;
+  --ceria-font-title: 'Baloo 2', 'Plus Jakarta Sans', ui-sans-serif, sans-serif;
+
+  /* Ornamen: tangkai bunga (satu sudut), untaian mutiara melengkung (sudut
+     lain), coretan bawah judul, dan bintik konfeti. Bentuk ditaruh di mask
+     SVG supaya warnanya ikut palet dan bisa diganti tanpa menyentuh markup. */
+  --ceria-stem: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 70 90'%3E%3Cg fill='%23000'%3E%3Cpath d='M6 84c14-10 22-26 26-44 2-10 3-20 2-30l3 0c1 11 0 22-3 33-4 18-12 34-26 44z'/%3E%3Cg%3E%3Cpath d='M34 20c8-1 13-10 12-18-8 0-14 7-14 15z'/%3E%3Cpath d='M36 21c3 8 12 12 20 10-2-8-10-13-18-12z'/%3E%3C/g%3E%3Cpath d='M8 86c1.6 0 3-1.4 3-3s-1.4-3-3-3-3 1.4-3 3 1.4 3 3 3z'/%3E%3Cpath d='M20 78c1.4 0 2.5-1.1 2.5-2.5S21.4 73 20 73s-2.5 1.1-2.5 2.5S18.6 78 20 78z'/%3E%3Cpath d='M30 66c1.2 0 2.2-1 2.2-2.2s-1-2.2-2.2-2.2-2.2 1-2.2 2.2 1 2.2 2.2 2.2z'/%3E%3C/g%3E%3C/svg%3E");
+  --ceria-scribble: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 14'%3E%3Cpath d='M3 10c18-5 36-7 54-5 14 1 28 4 42 3' stroke='%23000' stroke-width='4' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+  --ceria-dots: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg fill='%23000'%3E%3Ccircle cx='7' cy='9' r='2.6'/%3E%3Ccircle cx='19' cy='5' r='2'/%3E%3Ccircle cx='31' cy='11' r='3'/%3E%3Ccircle cx='12' cy='22' r='2.2'/%3E%3Ccircle cx='26' cy='24' r='2.8'/%3E%3Ccircle cx='36' cy='31' r='1.8'/%3E%3Ccircle cx='8' cy='34' r='2.4'/%3E%3Ccircle cx='20' cy='36' r='1.6'/%3E%3C/g%3E%3C/svg%3E");
+  --ceria-pearls: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40'%3E%3Cpath d='M4 9C28 32 72 32 96 9' stroke='%23000' stroke-width='2.4' fill='none'/%3E%3Cg fill='%23000'%3E%3Ccircle cx='8.5' cy='12.9' r='2.8'/%3E%3Ccircle cx='17.8' cy='18.7' r='3.4'/%3E%3Ccircle cx='28.0' cy='22.9' r='3.4'/%3E%3Ccircle cx='38.8' cy='25.4' r='3.4'/%3E%3Ccircle cx='50.0' cy='26.2' r='3.4'/%3E%3Ccircle cx='61.2' cy='25.4' r='3.4'/%3E%3Ccircle cx='72.0' cy='22.9' r='3.4'/%3E%3Ccircle cx='82.2' cy='18.7' r='3.4'/%3E%3Ccircle cx='91.5' cy='12.9' r='2.8'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Latar krem kertas, bukan gradasi rose. */
+[data-template='ceria'] .ny-cover {
+  background-image: none;
+  background-color: var(--color-rose-50);
+}
+
+[data-template='ceria'] .ny-cover-inner h1 {
+  font-family: var(--ceria-font-hand);
+  font-style: normal;
+  /* Ukuran mengikuti lebar layar: nama panjang dibiarkan membungkus rapi,
+     bukan melimpah keluar bingkai. Batas atas 4.25rem = ukuran desktop. */
+  font-size: clamp(2.6rem, 12.5vw, 4.25rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  text-wrap: balance;
+}
+
+/* Kicker "The Wedding Of": hand-lettered, zaitun seperti referensi. */
+[data-template='ceria'] .ny-cover-inner > p:first-child {
+  font-family: var(--ceria-font-title);
+  font-size: 0.8rem;
+  letter-spacing: 0.24em;
+}
+
+[data-template='ceria'] .ny-title h2 {
+  font-family: var(--ceria-font-title);
+  font-style: normal;
+  font-size: 1.75rem;
+  letter-spacing: 0.01em;
+}
+
+[data-template='ceria'] .ny-divider {
+  display: none;
+}
+
+/* Judul bagian digarisbawahi coretan tangan (mask). */
+[data-template='ceria'] .ny-title::after {
+  content: '';
+  display: block;
+  width: 9rem;
+  height: 0.9rem;
+  margin: 0.5rem auto 0;
+  background-color: var(--color-rose-400);
+  -webkit-mask: var(--ceria-scribble) no-repeat center / contain;
+  mask: var(--ceria-scribble) no-repeat center / contain;
+}
+
+/* Kartu: kertas putih sudut goyah di atas krem, tanpa bayangan. */
+[data-template='ceria'] .ny-card {
+  border-radius: 1.75rem;
+  border-color: var(--color-rose-200);
+  box-shadow: none;
+}
+
+/* Nama mempelai & label acara pakai tulisan tangan. */
+[data-template='ceria'] .ny-card h3,
+[data-template='ceria'] .ny-card p[class~='font-display'] {
+  font-family: var(--ceria-font-hand);
+  font-style: normal;
+}
+
+/* Foto mempelai: bulat penuh dengan cincin tinta putus-putus, meniru avatar
+   dalam bingkai di referensi. ring-2 bawaan diganti outline supaya
+   putus-putusnya bisa diatur jarak. */
+[data-template='ceria'] .ny-card img.rounded-full {
+  --tw-ring-shadow: 0 0 #0000;
+  outline: 3px dashed var(--color-rose-300);
+  outline-offset: 5px;
+}
+
+[data-template='ceria'] .ny-card div.rounded-full {
+  outline: 3px dashed var(--color-rose-300);
+  outline-offset: 5px;
+  font-family: var(--ceria-font-hand);
+  font-style: normal;
+  font-size: 2rem;
+}
+
+/* Galeri: foto ditempel miring bergantian, sudut goyah. */
+[data-template='ceria'] .ny-gallery li:nth-child(odd) button {
+  border-radius: 1.25rem 0.4rem 1.25rem 0.4rem;
+  transform: rotate(-1.2deg);
+}
+
+[data-template='ceria'] .ny-gallery li:nth-child(even) button {
+  border-radius: 0.4rem 1.25rem 0.4rem 1.25rem;
+  transform: rotate(1.2deg);
+}
+
+/* Cerita: garis putus-putus + titik tinta. */
+[data-template='ceria'] .ny-story li {
+  border-left-style: dashed;
+  border-left-color: var(--color-rose-300);
+}
+
+[data-template='ceria'] .ny-story li > span {
+  background-color: var(--color-rose-500);
+}
+
+[data-template='ceria'] .ny-story h3 {
+  font-family: var(--ceria-font-hand);
+  font-size: 1.6rem;
+}
+
+/* Hitung mundur: kartu kertas bergaris tinta + bayangan blok, angka besar
+   bulat (meniru papan skor di referensi), bukan gradasi gelap. */
+[data-template='ceria'] .ny-countdown {
+  background-image: none;
+  background-color: #fff;
+  color: var(--ceria-ink);
+  border: 2px solid var(--color-rose-300);
+  border-radius: 2rem 0.9rem 2rem 0.9rem;
+  box-shadow: 7px 7px 0 0 var(--color-rose-200);
+}
+
+[data-template='ceria'] .ny-countdown [class~='text-rose-100'] {
+  color: var(--color-rose-700);
+}
+
+[data-template='ceria'] .ny-countdown [class~='bg-white/10'] {
+  background-color: var(--color-rose-50);
+  border-radius: 1rem 0.4rem 1rem 0.4rem;
+}
+
+[data-template='ceria'] .ny-countdown [class~='font-display'] {
+  font-family: var(--ceria-font-title);
+  font-style: normal;
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Bingkai cover: garis tinta dobel, sudut goyah. */
+[data-template='ceria'] .ny-frame {
+  border: 2px solid var(--color-rose-300);
+  border-radius: 2.5rem 1rem 2.5rem 1rem;
+  outline: 1px dashed var(--color-rose-200);
+  outline-offset: 6px;
+}
+
+/* Ornamen cover: tangkai bunga di sudut kanan-atas, untaian mutiara di sudut
+   kiri-bawah. Keduanya ditaruh agak ke dalam supaya ujungnya tidak terpotong
+   tepi layar; z-index 4 = di atas bingkai, di bawah teks (ny-cover-inner z-10). */
+[data-template='ceria'] .ny-cover::before {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  top: 2.25rem;
+  right: 2.25rem;
+  width: 7rem;
+  height: 8.75rem;
+  opacity: 0.92;
+  transform: rotate(8deg);
+  background-color: var(--color-rose-400);
+  -webkit-mask: var(--ceria-stem) no-repeat center / contain;
+  mask: var(--ceria-stem) no-repeat center / contain;
+}
+
+/* Untaian mutiara: lengkung mendatar, ditempel di sudut kiri-bawah cover
+   (area ini kosong karena isi cover selalu rata tengah). */
+[data-template='ceria'] .ny-cover::after {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  bottom: 1.75rem;
+  left: 1.5rem;
+  width: 10rem;
+  height: 4rem;
+  opacity: 0.95;
+  transform: rotate(-3deg);
+  background-color: var(--color-rose-300);
+  -webkit-mask: var(--ceria-pearls) no-repeat center / contain;
+  mask: var(--ceria-pearls) no-repeat center / contain;
+}
+
+/* Tanggal di cover: tinta hangat, bukan abu kebiruan bawaan slate. */
+[data-template='ceria'] .ny-cover-inner > p.text-slate-600 {
+  color: var(--ceria-ink);
+  opacity: 0.78;
+}
+
+/* Bintik konfeti di sekitar judul bagian (layar lebar saja). */
+@media (min-width: 640px) {
+  [data-template='ceria'] .ny-title {
+    position: relative;
+  }
+
+  [data-template='ceria'] .ny-title::before {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    top: -0.75rem;
+    width: 3.25rem;
+    height: 3.25rem;
+    background-color: var(--color-rose-300);
+    -webkit-mask: var(--ceria-dots) no-repeat center / contain;
+    mask: var(--ceria-dots) no-repeat center / contain;
+  }
+}
+
+/* Nama di thumbnail kartu template (TemplateCard.jsx) pakai tulisan tangan,
+   supaya bentuk kartu di galeri cocok dengan gayanya. */
+[data-template='ceria'] .ny-thumb-hand {
+  font-family: var(--ceria-font-hand);
+  font-size: 1.5rem;
+  font-style: normal;
+  line-height: 1.1;
+}
+
+/* Pemisah dua mempelai: untaian mutiara mengapit ampersand, meniru dua panel
+   yang disambung dawai mutiara di referensi. Diam-diam menggantikan garis
+   pemisah biasa; elemennya tetap `&` yang sama. */
+[data-template='ceria'] #mempelai p[aria-hidden='true'] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-family: var(--ceria-font-hand);
+  font-size: 2.5rem;
+}
+
+[data-template='ceria'] #mempelai p[aria-hidden='true']::before,
+[data-template='ceria'] #mempelai p[aria-hidden='true']::after {
+  content: '';
+  flex: 0 0 auto;
+  width: 5rem;
+  height: 1.6rem;
+  background-color: var(--color-rose-300);
+  -webkit-mask: var(--ceria-pearls) no-repeat center / contain;
+  mask: var(--ceria-pearls) no-repeat center / contain;
+}
+
+[data-template='ceria'] #mempelai p[aria-hidden='true']::after {
+  transform: scaleX(-1);
+}
+
+/* ===== Kerangka animasi reveal (semua template) ===== */
+
+.ny-reveal {
+  will-change: transform, opacity;
+}
+
+/* Wrapper kosong (section null di React) tidak boleh menyisakan jarak. */
+.ny-reveal:empty {
+  display: none;
+}
+
+/* ===== Klasik: kartu terangkat saat disentuh ===== */
+
+[data-template='klasik'] .ny-card {
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+@media (hover: hover) {
+  [data-template='klasik'] .ny-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 34px -20px rgb(76 5 25 / 0.4);
+  }
+}
+
+/* ===== Minimalis: rata kiri, tipografi kapital, kartu garis ===== */
+
+[data-template='minimalis'] .ny-title {
+  text-align: left;
+}
+
+[data-template='minimalis'] .ny-title h2 {
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-rose-700);
+}
+
+[data-template='minimalis'] .ny-title::before {
+  content: '';
+  display: block;
+  width: 3rem;
+  margin-bottom: 1rem;
+  border-top: 1px solid var(--color-rose-300);
+}
+
+[data-template='minimalis'] .ny-divider {
+  display: none;
+}
+
+[data-template='minimalis'] .ny-card {
+  border-radius: 0;
+  border-width: 1px 0 0;
+  border-color: var(--color-rose-200);
+  box-shadow: none;
+}
+
+[data-template='minimalis'] .ny-countdown {
+  border-radius: 0;
+  border: 1px solid var(--color-rose-200);
+  background-image: none;
+  background-color: #fff;
+  box-shadow: none;
+  color: var(--color-rose-900);
+  text-align: left;
+}
+
+[data-template='minimalis'] .ny-countdown [class~='text-rose-100'] {
+  color: var(--color-rose-600);
+}
+
+[data-template='minimalis'] .ny-countdown [class~='bg-white/10'] {
+  background-color: var(--color-rose-50);
+}
+
+[data-template='minimalis'] .ny-countdown [class~='font-display'] {
+  font-family: var(--font-sans);
+  font-style: normal;
+}
+
+[data-template='minimalis'] .ny-cover {
+  justify-content: flex-end;
+  padding-bottom: 5rem;
+}
+
+[data-template='minimalis'] .ny-cover-inner {
+  align-items: flex-start;
+  text-align: left;
+}
+
+[data-template='minimalis'] .ny-cover-inner h1 {
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-size: 2.5rem;
+}
+
+[data-template='minimalis'] .ny-frame {
+  border-radius: 0;
+}
+
+/* Glow lembut mengikuti kursor (hanya desktop berpointer presisi). */
+@media (hover: hover) and (pointer: fine) {
+  [data-template='minimalis'] .ny-cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    background: radial-gradient(
+      520px circle at var(--glow-x, 60%) var(--glow-y, 40%),
+      color-mix(in oklab, var(--color-rose-300) 55%, transparent),
+      transparent 46%
+    );
+  }
+
+  [data-template='minimalis'] .ny-cover:hover::after {
+    opacity: 1;
+  }
+}
+
+/* ===== Floral: kartu mekar, foto melengkung ala taman ===== */
+
+[data-template='floral'] .ny-card {
+  border-radius: 2.25rem;
+  transition: transform 0.35s ease;
+}
+
+@media (hover: hover) {
+  [data-template='floral'] .ny-card:hover {
+    transform: scale(1.012);
+  }
+}
+
+[data-template='floral'] .ny-gallery button {
+  border-radius: 999px 999px 1.25rem 1.25rem;
+}
+
+/* Foto cover floral: lengkungan taman (arch), bukan kotak penuh layar.
+   width/height harus eksplisit: img itu replaced element, jadi `inset` +
+   width:auto memakai ukuran intrinsik dan fotonya meluber keluar layar. */
+[data-template='floral'] .ny-cover img {
+  inset: 11% 10% 5%;
+  width: 80%;
+  height: 84%;
+  object-fit: cover;
+  object-position: 50% 35%;
+  border-radius: 999px 999px 1.25rem 1.25rem;
+}
+
+/* Vignette di tepi lengkungan supaya foto melebur ke halaman.
+   div tidak kena masalah replaced-element, jadi cukup inset + radius. */
+[data-template='floral'] .ny-cover .ny-scrim {
+  inset: 11% 10% 5%;
+  border-radius: 999px 999px 1.25rem 1.25rem;
+  box-shadow: inset 0 0 72px 16px rgb(0 0 0 / 0.5);
+}
+
+/* Kabut tipis di belakang teks judul supaya tetap terbaca di atas foto. */
+[data-template='floral'] .ny-cover .ny-text-scrim {
+  background: radial-gradient(
+    ellipse 62% 44% at 50% 52%,
+    rgb(12 10 20 / 0.62),
+    rgb(12 10 20 / 0.28) 58%,
+    transparent 78%
+  );
+}
+
+[data-template='floral'] .ny-frame {
+  border-radius: 999px 999px 1.5rem 1.5rem;
+}
+
+[data-template='floral'] .ny-story li {
+  border-color: var(--color-rose-300);
+}
+
+[data-template='minimalis'] .ny-gallery button {
+  border-radius: 0;
+}
+
+/* ===== Pratinjau (wizard & galeri template) =====
+ * Halaman tamu asli memakai min-h-svh di cover; di dalam modal itu jadi
+ * setinggi viewport penuh. Diperkecil supaya enak digulir di frame pratinjau. */
+
+.ny-preview .ny-cover {
+  min-height: 32rem;
+}

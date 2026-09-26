@@ -1,0 +1,745 @@
+/*
+ * Template "elegan": editorial sinematik.
+ *
+ * Palet: ivory hangat + arang pekat + aksen bronze. Semua nilai oklch di bawah
+ * sudah diaudit kontras WCAG AA terhadap latarnya (teks kecil >= 4.5:1,
+ * garis/ikon >= 3:1) — lihat catatan angka di tiap blok.
+ *
+ * Bentuk khas yang membedakan template ini:
+ *   - bingkai arch (setengah lingkaran di atas, sisi lurus) berulang,
+ *   - cover gelap full-bleed dengan huruf besar berjarak lebar,
+ *   - panel arang di bagian penutup,
+ *   - kolase masonry dengan tinggi bervariasi.
+ *
+ * Kelas berawalan `el-` hanya dipakai template ini; kelas `ny-*` (milik
+ * template lama) tidak disentuh supaya tidak ada regresi.
+ */
+
+/* Palet + token. rose-50..900 disetel ulang ke netral hangat/bronze.
+   50-200 dipakai sebagai latar, 300 garis (>= 3:1), 400.. teks (>= 4.5:1). */
+[data-template='elegan'] {
+  --color-rose-50: oklch(97.6% 0.006 85);
+  --color-rose-100: oklch(94.4% 0.011 84);
+  --color-rose-200: oklch(89.6% 0.017 82);
+  --color-rose-300: oklch(65% 0.028 78);   /* 3.02:1 di ivory — garis/ikon */
+  --color-rose-400: oklch(55% 0.045 74);   /* 4.55:1 — teks kecil, ikon */
+  --color-rose-500: oklch(48.2% 0.052 72); /* 6.10:1 */
+  --color-rose-600: oklch(40.5% 0.048 70); /* 8.49:1 */
+  --color-rose-700: oklch(33.8% 0.04 68);  /* 11.14:1 */
+  --color-rose-800: oklch(27.6% 0.032 66);
+  --color-rose-900: oklch(21.4% 0.022 66);
+
+  --el-ivory: oklch(97.6% 0.006 85);
+  --el-ink: oklch(21.4% 0.022 66);
+  --el-charcoal: oklch(24% 0.008 70);
+  --el-bronze: oklch(65% 0.028 78);
+  --el-font-display: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  --el-font-sans: 'Jost', 'Plus Jakarta Sans', ui-sans-serif, sans-serif;
+}
+
+[data-template='elegan'] {
+  background-color: var(--el-ivory);
+  color: var(--color-rose-800);
+  font-family: var(--el-font-sans);
+  font-weight: 300;
+}
+
+/* ---------- Cover ---------- */
+
+.el-cover {
+  position: relative;
+  display: flex;
+  min-height: 100svh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 4rem 1.5rem;
+  text-align: center;
+  background-color: var(--el-charcoal);
+}
+
+.el-cover-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+  filter: saturate(0.7) contrast(1.05);
+}
+
+.el-cover-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 55%, rgb(0 0 0 / 0.15), rgb(0 0 0 / 0.6)),
+    linear-gradient(to bottom, rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.25) 40%, rgb(0 0 0 / 0.7));
+}
+
+.el-cover-inner {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+}
+
+.el-eyebrow {
+  font-size: 0.66rem;
+  font-weight: 400;
+  letter-spacing: 0.44em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.75);
+}
+
+.el-guest {
+  margin-top: 1.6rem;
+  border: 1px solid rgb(255 255 255 / 0.32);
+  padding: 0.35rem 1rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: rgb(255 255 255 / 0.9);
+}
+
+.el-names {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--el-font-display);
+  font-size: clamp(2.6rem, 11vw, 4.6rem);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.el-names em {
+  font-size: 0.42em;
+  font-style: italic;
+  letter-spacing: 0.1em;
+  color: rgb(255 255 255 / 0.7);
+}
+
+.el-rule {
+  margin-top: 2rem;
+  width: 7rem;
+  height: 1px;
+  background-color: rgb(255 255 255 / 0.55);
+}
+
+.el-date {
+  margin-top: 1.6rem;
+  font-size: 0.92rem;
+  letter-spacing: 0.34em;
+  color: rgb(255 255 255 / 0.92);
+}
+
+.el-open {
+  margin-top: 3.4rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 1px solid rgb(255 255 255 / 0.5);
+  border-radius: 999px;
+  padding: 0.7rem 1.6rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #fff;
+  transition: background-color 200ms, border-color 200ms;
+}
+
+.el-open:hover,
+.el-open:focus-visible {
+  background-color: rgb(255 255 255 / 0.14);
+  border-color: #fff;
+}
+
+.el-open-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+/* ---------- Kerangka section ---------- */
+
+.el-section {
+  padding: 5.5rem 1.5rem;
+  text-align: center;
+}
+
+.el-kicker {
+  font-size: 0.66rem;
+  font-weight: 400;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--color-rose-500);
+}
+
+.el-h2 {
+  margin-top: 1.1rem;
+  font-family: var(--el-font-display);
+  font-size: clamp(1.9rem, 6vw, 2.75rem);
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: 0.06em;
+  color: var(--el-ink);
+}
+
+.el-h2 em {
+  font-style: italic;
+  color: var(--color-rose-400);
+}
+
+.el-lead {
+  margin: 1.4rem auto 0;
+  max-width: 30rem;
+  font-size: 0.95rem;
+  line-height: 1.85;
+  color: var(--color-rose-600);
+}
+
+.el-on-dark {
+  color: var(--el-bronze);
+}
+
+.el-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--color-rose-300);
+  padding: 0.6rem 1.3rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-rose-700);
+  transition: background-color 200ms, color 200ms, border-color 200ms;
+}
+
+.el-btn:hover,
+.el-btn:focus-visible {
+  background-color: var(--el-ink);
+  border-color: var(--el-ink);
+  color: var(--el-ivory);
+}
+
+.el-btn-ghost {
+  border-color: var(--color-rose-200);
+}
+
+/* ---------- Mempelai: dua bingkai arch ---------- */
+
+.el-couple {
+  margin: 3.5rem auto 0;
+  display: flex;
+  max-width: 46rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+}
+
+@media (min-width: 640px) {
+  .el-couple {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 3.5rem;
+  }
+}
+
+.el-couple-card {
+  display: flex;
+  width: min(100%, 20rem);
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Bingkai arch: sisi lurus, puncak setengah lingkaran. Bentuk inti template. */
+.el-arch {
+  position: relative;
+  display: flex;
+  height: 21rem;
+  width: 15rem;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--color-rose-300);
+  border-radius: 999px 999px 0.75rem 0.75rem;
+  background-color: var(--color-rose-100);
+}
+
+.el-arch img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.el-arch-initial {
+  font-family: var(--el-font-display);
+  font-size: 4.5rem;
+  font-weight: 300;
+  color: var(--color-rose-400);
+}
+
+.el-couple-card h3 {
+  margin-top: 1.6rem;
+  font-family: var(--el-font-display);
+  font-size: 1.6rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--el-ink);
+}
+
+.el-nick {
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--color-rose-500);
+}
+
+.el-parents {
+  margin-top: 0.9rem;
+  font-size: 0.82rem;
+  line-height: 1.75;
+  letter-spacing: 0.06em;
+  color: var(--color-rose-600);
+}
+
+.el-ig {
+  margin-top: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--color-rose-500);
+}
+
+.el-ig svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+/* ---------- Quote ---------- */
+
+.el-quote {
+  background-color: var(--color-rose-100);
+  padding: 5rem 1.5rem;
+  text-align: center;
+}
+
+.el-quote blockquote {
+  margin: 0 auto;
+  max-width: 34rem;
+  position: relative;
+}
+
+.el-quote-mark {
+  display: block;
+  font-family: var(--el-font-display);
+  font-size: 4rem;
+  line-height: 0.6;
+  color: var(--color-rose-300);
+}
+
+.el-quote p {
+  margin-top: 1rem;
+  font-family: var(--el-font-display);
+  font-size: clamp(1.15rem, 3.6vw, 1.5rem);
+  font-style: italic;
+  line-height: 1.7;
+  color: var(--color-rose-800);
+}
+
+.el-quote cite {
+  margin-top: 1.2rem;
+  display: block;
+  font-size: 0.7rem;
+  font-style: normal;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-rose-500);
+}
+
+/* ---------- Acara ---------- */
+
+.el-event-grid {
+  margin: 3.5rem auto 0;
+  display: flex;
+  max-width: 44rem;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.el-event {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  text-align: left;
+  border-top: 1px solid var(--color-rose-200);
+  padding-top: 2rem;
+}
+
+.el-event-date {
+  display: flex;
+  min-width: 5.5rem;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--el-font-display);
+  color: var(--el-ink);
+}
+
+.el-event-day {
+  font-size: 3rem;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.el-event-my {
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  color: var(--color-rose-500);
+}
+
+.el-event-body h3 {
+  font-family: var(--el-font-display);
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--el-ink);
+}
+
+.el-event-line {
+  margin-top: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.86rem;
+  color: var(--color-rose-600);
+}
+
+.el-event-line svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: none;
+  color: var(--color-rose-400);
+}
+
+.el-event-venue {
+  margin-top: 0.7rem;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: var(--color-rose-800);
+}
+
+.el-event-addr {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  line-height: 1.65;
+  color: var(--color-rose-500);
+}
+
+.el-event .el-btn {
+  margin-top: 1.1rem;
+}
+
+/* ---------- Hitung mundur ---------- */
+
+.el-countdown {
+  background-color: var(--el-charcoal);
+  padding: 4.5rem 1.5rem;
+  text-align: center;
+}
+
+.el-count-row {
+  margin: 2.2rem auto 0;
+  display: flex;
+  max-width: 30rem;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1.4rem;
+}
+
+.el-count-cell {
+  display: flex;
+  min-width: 3.6rem;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+}
+
+.el-count-num {
+  font-family: var(--el-font-display);
+  font-size: clamp(2rem, 8vw, 2.9rem);
+  font-weight: 300;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.el-count-label {
+  margin-top: 0.55rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.6);
+}
+
+/* ---------- Galeri masonry ---------- */
+
+.el-masonry {
+  margin: 3.5rem auto 0;
+  max-width: 46rem;
+  columns: 2;
+  column-gap: 0.9rem;
+}
+
+@media (min-width: 700px) {
+  .el-masonry {
+    columns: 3;
+  }
+}
+
+.el-shot {
+  margin: 0 0 0.9rem;
+  break-inside: avoid;
+  overflow: hidden;
+  border: 1px solid var(--color-rose-200);
+  background-color: var(--color-rose-100);
+}
+
+.el-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Ritme: foto tertentu berbingkai arch supaya kolase tidak monoton. */
+.el-shot-arch {
+  border-radius: 999px 999px 0 0;
+}
+
+.el-shot-arch img {
+  aspect-ratio: 3 / 4.4;
+  object-fit: cover;
+}
+
+/* ---------- Cerita ---------- */
+
+.el-story {
+  margin: 3.5rem auto 0;
+  max-width: 38rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.4rem;
+  text-align: left;
+}
+
+.el-story li {
+  display: flex;
+  gap: 1.3rem;
+  border-top: 1px solid var(--color-rose-200);
+  padding-top: 1.8rem;
+}
+
+.el-story-num {
+  font-family: var(--el-font-display);
+  font-size: 2.1rem;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--color-rose-300);
+}
+
+.el-story-date {
+  font-size: 0.68rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--color-rose-500);
+}
+
+.el-story h3 {
+  margin-top: 0.45rem;
+  font-family: var(--el-font-display);
+  font-size: 1.4rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: var(--el-ink);
+}
+
+.el-story-text {
+  margin-top: 0.6rem;
+  font-size: 0.92rem;
+  line-height: 1.8;
+  color: var(--color-rose-600);
+}
+
+/* ---------- Hadiah ---------- */
+
+.el-gift-list {
+  margin: 3rem auto 0;
+  display: flex;
+  max-width: 34rem;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.el-gift-card {
+  border: 1px solid var(--color-rose-200);
+  background-color: #fff;
+  padding: 1.6rem 1.4rem;
+  text-align: center;
+}
+
+.el-gift-bank {
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-rose-500);
+}
+
+.el-gift-number {
+  margin-top: 0.7rem;
+  font-family: var(--el-font-display);
+  font-size: 1.7rem;
+  letter-spacing: 0.08em;
+  color: var(--el-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.el-gift-name {
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--color-rose-600);
+}
+
+.el-gift-card .el-btn {
+  margin-top: 1.2rem;
+}
+
+/* ---------- Penutup ---------- */
+
+.el-closing {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--el-ivory);
+}
+
+@media (min-width: 700px) {
+  .el-closing {
+    flex-direction: row;
+    align-items: stretch;
+  }
+}
+
+.el-closing-photo {
+  overflow: hidden;
+}
+
+.el-closing-photo img {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+@media (min-width: 700px) {
+  .el-closing-photo {
+    flex: 0 0 50%;
+  }
+}
+
+.el-closing-panel {
+  background-color: var(--el-charcoal);
+  padding: 4rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: rgb(255 255 255 / 0.82);
+}
+
+@media (min-width: 700px) {
+  .el-closing-panel {
+    flex: 1;
+    padding: 5rem 3rem;
+    text-align: left;
+    align-items: flex-start;
+  }
+}
+
+.el-closing-panel p {
+  max-width: 30rem;
+  font-size: 0.95rem;
+  line-height: 1.9;
+}
+
+.el-sign {
+  margin-top: 2.4rem !important;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-family: var(--el-font-display);
+  font-size: clamp(1.7rem, 6vw, 2.4rem);
+  font-weight: 300;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.el-sign em {
+  font-style: italic;
+  color: var(--el-bronze);
+}
+
+.el-closing-date {
+  margin-top: 1.2rem !important;
+  font-size: 0.8rem;
+  letter-spacing: 0.34em;
+  color: rgb(255 255 255 / 0.7);
+}
+
+/* ---------- Halaman tamu: daftar ucapan versi elegan ---------- */
+
+[data-template='elegan'] .ny-card {
+  border-radius: 0;
+  border-color: var(--color-rose-200);
+  box-shadow: none;
+  background-color: #fff;
+}
+
+[data-template='elegan'] .ny-title h2 {
+  font-family: var(--el-font-display);
+  font-style: normal;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+}
+
+[data-template='elegan'] .ny-divider {
+  background-color: var(--color-rose-300);
+}
+
+/* Reduced motion: pastikan tidak ada elemen tersembunyi permanen kalau GSAP
+   tidak jalan (mis. JS dimatikan). Semua animasi GSAP memakai gsap.from,
+   jadi keadaan awal markup tetap "tampil" — tidak perlu override khusus. */
+
+/* Thumbnail galeri (components/templates/TemplateCard.jsx) memakai serif
+   editorial juga, supaya bentuk template terlihat dari kartunya. */
+[data-template='elegan'] .ny-thumb-serif {
+  font-family: var(--el-font-display);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+}
+
+/* Pembungkus section buku ucapan (markup generik) di halaman tamu elegan. */
+.el-guest {
+  padding: 5rem 1.5rem;
+}
+
+/* Halaman elegan bisa tampil di dalam modal pratinjau: batasi tinggi cover
+   supaya tidak memakan seluruh layar. */
+.ny-preview .el-cover {
+  min-height: 32rem;
+}
