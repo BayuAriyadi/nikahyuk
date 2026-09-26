@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\InvitationController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\MusicController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Middleware\EnsureIsAdmin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -107,4 +109,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Owner: status transaksi — dipakai UI untuk polling setelah scan QRIS.
     Route::get('/transactions/{transaction:order_id}', [TransactionController::class, 'show'])
         ->middleware('throttle:240,1,tx-status');
+
+    // Superadmin Routes
+    Route::prefix('admin')->middleware(EnsureIsAdmin::class)->group(function () {
+        Route::get('/users', [AdminController::class, 'users']);
+        Route::patch('/users/{user}', [AdminController::class, 'update']);
+        Route::delete('/users/{user}', [AdminController::class, 'destroy']);
+        Route::get('/stats', [AdminController::class, 'stats']);
+    });
 });

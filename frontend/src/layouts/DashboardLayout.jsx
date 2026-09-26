@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { to: '/dashboard/undangan', label: 'Undangan Saya' },
   { to: '/dashboard/tamu', label: 'Daftar Tamu' },
   { to: '/dashboard/ucapan', label: 'Buku Ucapan' },
+  { to: '/dashboard/admin', label: 'Superadmin', adminOnly: true },
   { to: '/dashboard/pengaturan', label: 'Pengaturan' },
 ]
 
@@ -46,11 +47,14 @@ export default function DashboardLayout() {
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4">
-          {NAV_ITEMS.map((item) => (
-            <NavLink key={item.to} to={item.to} end={item.end} className={navLinkClass}>
-              {item.label}
-            </NavLink>
-          ))}
+          {NAV_ITEMS.map((item) => {
+            if (item.adminOnly && user?.role !== 'admin') return null
+            return (
+              <NavLink key={item.to} to={item.to} end={item.end} className={navLinkClass}>
+                {item.label}
+              </NavLink>
+            )
+          })}
         </nav>
 
         <div className="border-t border-slate-200 p-4">
