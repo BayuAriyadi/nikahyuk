@@ -1,14 +1,17 @@
 /**
  * Siapkan foto untuk upload: perkecil ke maksimum 1600 px (sisi terpanjang)
- * lalu encode ulang sebagai JPEG kualitas 0.85.
+ * lalu encode ulang sebagai WebP kualitas 0.82 (fallback JPEG 0.85 di
+ * browser yang belum bisa encode WebP).
  *
  * Alasan: php.ini runtime server membatasi upload 2 MB per file. Foto kamera
  * HP biasanya 3-8 MB, jadi di-resize dulu di browser sebelum dikirim supaya
- * tidak kena 413/422. Kalau hasilnya masih lebih besar dari 2 MB (kasus
- * langka), file ditolak dengan pesan yang bisa ditampilkan ke user.
+ * tidak kena 413/422. WebP menghemat ~30% lebih banyak dari JPEG di kualitas
+ * visual setara — halaman undangan jadi lebih cepat dibuka tamu.
+ * Server tetap menormalkan ke WebP sebagai jaring pengaman.
  */
 
 const MAX_DIMENSION = 1600
+const WEBP_QUALITY = 0.82
 const JPEG_QUALITY = 0.85
 const MAX_BYTES = 2 * 1024 * 1024
 
@@ -33,20 +36,29 @@ export async function preparePhoto(file) {
     source.close()
   }
 
-  const blob = await new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (value) => (value ? resolve(value) : reject(new Error('Gagal memproses gambar.'))),
-      'image/jpeg',
-      JPEG_QUALITY,
-    )
-  })
+  let blob = await canvasToBlob(canvas, 'image/webp', WEBP_QUALITY)
+  if (blob.type !== 'image/webp') {
+    // Browser lama: toBlob menjatuhkan ke PNG. Pakai JPEG yang jauh lebih kecil.
+    blob = await canvasToBlob(canvas, 'image/jpeg', JPEG_QUALITY)
+  }
 
-  const output = new File([blob], renameToJpg(file.name), { type: 'image/jpeg' })
+  const extension = blob.type === 'image/webp' ? 'webp' : 'jpg'
+  const output = new File([blob], renameTo(file.name, extension), { type: blob.type })
   if (output.size > MAX_BYTES) {
     throw new Error('Foto masih terlalu besar setelah diproses. Coba foto lain.')
   }
 
   return output
+}
+
+function canvasToBlob(canvas, type, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (value) => (value ? resolve(value) : reject(new Error('Gagal memproses gambar.'))),
+      type,
+      quality,
+    )
+  })
 }
 
 async function loadBitmap(file) {
@@ -73,6 +85,7 @@ async function loadBitmap(file) {
   })
 }
 
-function renameToJpg(name) {
-  return `${String(name || 'foto').replace(/\.[^.]+$/, '') || 'foto'}.jpg`
+function renameTo(name, extension) {
+  const base = String(name || 'foto').replace(/\.[^.]+$/, '') || 'foto'
+  return `${base}.${extension}`
 }

@@ -1,7 +1,7 @@
 # STATUS — nikahyuk
 
 Dokumen orientasi untuk sesi kerja baru. Baca ini dulu sebelum menyentuh kode.
-Terakhir diperbarui: 2026-09-25.
+Terakhir diperbarui: 2026-09-26.
 
 ## Apa ini
 
@@ -153,6 +153,13 @@ Undangan Baru", dan "Pratinjau undangan". Singkatnya:
   mengulang dari langkah 1.
 - Pratinjau dan galeri memakai ulang section halaman tamu yang di-ekspor dari
   `pages/PublicInvitation.jsx`, jadi tampilannya tidak bisa berbeda dari undangan asli.
+- **Optimisasi foto (WebP + resize)**: klien (`frontend/src/lib/image.js`) mengecilkan sisi
+  terpanjang ke 1600 px dan meng-encode WebP q0.82 di canvas sebelum upload (fallback JPEG
+  q0.85 kalau canvas WebP tidak tersedia). Server (`PhotoController`) menyimpan ulang sebagai
+  `.webp` q82 maks 1600 px sebagai jaring pengaman; WebP ≤1600 px dari klien disimpan apa
+  adanya (tanpa re-encode). Foto lama sudah di-backfill (`tests/manual/backfill_webp.php`) —
+  referensi di JSONB ikut diganti dan file asli dihapus kalau tidak lagi dirujuk. Harness itu
+  butuh route dev sementara untuk jalan (folder gallery milik root); hapus route-nya sesudah selesai.
 
 ## Yang belum
 
@@ -180,7 +187,8 @@ php tests/manual/verify_task2.php && bash tests/manual/smoke_task2.sh | tail -1
 ```
 
 Status terakhir semua hijau: task2 45/45, task3 24/24, task4 24/24, task5 63/63, task9 27/27,
-task10 40/40, task11 20/20, task12 18/18, task13 16/16, smoke_delete 13/13, smoke_task2 13/13.
+task10 40/40, task11 20/20, task12 18/18, task13 16/16, smoke_delete 13/13, smoke_task2 13/13,
+photo_webp 17/17, admin_free_publish 20/20.
 
 **Urutan penting**: `smoke_task2.sh` memakai `/opt/data/cache/scratch/task2_fixtures.json`
 (token + id undangan) yang ditulis ulang oleh `verify_task2.php`. **Beberapa harness lain
@@ -201,6 +209,12 @@ diperiksa dengan mata di `/` (bagian `#template`) karena itu murni soal tampilan
 
 ## Jebakan yang sudah pernah menggigit
 
+- **`storage/app/public/gallery` dimiliki root** (proses `php artisan serve` jalan sebagai root,
+  shell kerja uid 10000): harness CLI tidak bisa menulis/menghapus foto di sana. Uji upload
+  wajib lewat HTTP nyata (`verify_photo_webp.php` sudah begitu) atau lewat route dev sementara
+  (dipakai `backfill_webp.php`). Jangan andalkan `php` CLI untuk operasi file di `gallery/`.
+- **`upload_max_filesize=2M`** di php.ini userland: foto kamera besar langsung ke API gagal
+  (422). Klien sudah resize sebelum upload, jadi jalur normal aman.
 - **Vite blokir Host header tunnel** → 403; sudah ditangani `allowedHosts` di `vite.config.js`.
 - **Tailscale Funnel butuh `--statedir`** (lihat bagian akses di atas).
 - **DNS fake-IP di kontainer** → jangan simpulkan tunnel mati dari curl internal.
