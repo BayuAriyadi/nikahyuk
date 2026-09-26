@@ -4,6 +4,7 @@ import Modal from '../Modal.jsx'
 import { Alert } from '../form.jsx'
 import { transactionsApi } from '../../lib/api.js'
 import { useToast } from '../../context/ToastContext.jsx'
+import { useAuth } from '../../context/AuthContext.jsx'
 
 const rupiah = new Intl.NumberFormat('id-ID', {
   style: 'currency',
@@ -27,6 +28,8 @@ const expiryFormatter = new Intl.DateTimeFormat('id-ID', {
  */
 export default function PublishModal({ invitation, onClose, onPaid }) {
   const toast = useToast()
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
   const [checkout, setCheckout] = useState(null)
   const [qrDataUrl, setQrDataUrl] = useState(null)
   const [error, setError] = useState(null)
@@ -38,6 +41,7 @@ export default function PublishModal({ invitation, onClose, onPaid }) {
   const orderId = checkout?.order_id ?? null
   const paymentStatus = checkout?.payment_status ?? null
   const paid = paymentStatus === 'paid'
+  const freePublish = checkout?.published === true
   const finished = paymentStatus === 'expired' || paymentStatus === 'failed'
 
   // Saat modal tampil (atau "Coba lagi"): minta / ambil ulang tagihan QRIS.
@@ -114,14 +118,33 @@ export default function PublishModal({ invitation, onClose, onPaid }) {
     }
   }, [paid, onPaid, toast])
 
+  // Akun admin: langsung terbit tanpa pembayaran.
+  useEffect(() => {
+    if (freePublish && !paidNotified.current) {
+      paidNotified.current = true
+      toast.success('Undangan diterbitkan tanpa pembayaran (akun admin).')
+      onPaid?.()
+    }
+  }, [freePublish, onPaid, toast])
+
   return (
     <Modal
       open
       onClose={onClose}
       title="Terbitkan Undangan"
-      subtitle={slug ? `Undangan "${slug}" aktif otomatis setelah pembayaran QRIS diterima.` : undefined}
+      subtitle={
+        slug
+          ? isAdmin
+            ? `Akun admin — undangan "${slug}" langsung terbit, tanpa pembayaran.`
+            : `Undangan "${slug}" aktif otomatis setelah pembayaran QRIS diterima.`
+          : undefined
+      }
     >
-      {loading && <p className="text-sm text-slate-500">Menyiapkan tagihan QRIS…</p>}
+      {loading && (
+        <p className="text-sm text-slate-500">
+          {isAdmin ? 'Menerbitkan undangan…' : 'Menyiapkan tagihan QRIS…'}
+        </p>
+      )}
 
       {!loading && error && (
         <div className="space-y-3">
@@ -138,7 +161,7 @@ export default function PublishModal({ invitation, onClose, onPaid }) {
 
       {!loading && !error && checkout && (
         <div className="space-y-4">
-          {!paid && !finished && (
+          {!paid && !finished && !freePublish && (
             <>
               <p className="text-sm text-slate-600">
                 Scan QRIS ini pakai aplikasi e-wallet / m-banking apa pun. Setelah pembayaran
@@ -223,6 +246,16 @@ export default function PublishModal({ invitation, onClose, onPaid }) {
             </div>
           )}
 
+          {freePublish && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+              <p className="font-semibold">Undangan diterbitkan.</p>
+              <p className="mt-1">
+                Akun admin — tanpa pembayaran QRIS. Undangan langsung berstatus Terbit dan siap
+                dibagikan.
+              </p>
+            </div>
+          )}
+
           {paid && (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
               <p className="font-semibold">Pembayaran diterima.</p>
@@ -240,7 +273,7 @@ export default function PublishModal({ invitation, onClose, onPaid }) {
           onClick={onClose}
           className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
         >
-          {paid ? 'Selesai' : 'Tutup'}
+          {paid || freePublish ? 'Selesai' : 'Tutup'}
         </button>
       </div>
     </Modal>

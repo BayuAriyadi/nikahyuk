@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use App\Payments\PaymentGateway;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class TransactionController extends Controller
@@ -25,7 +26,7 @@ class TransactionController extends Controller
      * Kalau masih ada transaksi pending yang belum kedaluwarsa, transaksi itu
      * yang dikembalikan — tidak membuat tagihan dobel.
      */
-    public function store(string $slug): JsonResponse
+    public function store(Request $request, string $slug): JsonResponse
     {
         $invitation = Invitation::query()->where('slug', $slug)->firstOrFail();
 
@@ -35,6 +36,21 @@ class TransactionController extends Controller
             return response()->json([
                 'message' => 'Undangan sudah terbit — tidak perlu dibayar lagi.',
             ], 422);
+        }
+
+        // Akun admin: terbitkan langsung tanpa QRIS. Sengaja tidak mencatat
+        // transaksi supaya rekap pendapatan (admin dashboard) tetap berisi
+        // uang asli saja.
+        if ($request->user()?->role === 'admin') {
+            $invitation->update(['status' => 'published']);
+
+            return response()->json([
+                'data' => [
+                    'published' => true,
+                    'free' => true,
+                    'slug' => $invitation->slug,
+                ],
+            ]);
         }
 
         $pending = $invitation->transactions()
