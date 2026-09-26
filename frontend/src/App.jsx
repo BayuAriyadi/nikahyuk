@@ -1,7 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute, { PublicOnlyRoute } from './components/ProtectedRoute.jsx'
 import DashboardLayout from './layouts/DashboardLayout.jsx'
-import Admin from './pages/Admin.jsx'
+import AdminUsers from './pages/AdminUsers.jsx'
+import AdminRevenue from './pages/AdminRevenue.jsx'
 import ForgotPassword from './pages/ForgotPassword.jsx'
 import Guests from './pages/Guests.jsx'
 import Invitations from './pages/Invitations.jsx'
@@ -56,7 +57,9 @@ export default function App() {
         <Route path="undangan/baru" element={<InvitationWizard />} />
         <Route path="tamu" element={<Guests />} />
         <Route path="ucapan" element={<Messages />} />
-        <Route path="admin" element={<Admin />} />
+        <Route path="admin" element={<Navigate to="/dashboard/admin/users" replace />} />
+        <Route path="admin/users" element={<AdminUsers />} />
+        <Route path="admin/pendapatan" element={<AdminRevenue />} />
         <Route
           path="pengaturan"
           element={

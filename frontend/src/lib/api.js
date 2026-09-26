@@ -199,6 +199,7 @@ export const publicApi = {
 export const adminApi = {
   listUsers: () => apiFetch('/admin/users'),
   getStats: () => apiFetch('/admin/stats'),
+  listTransactions: () => apiFetch('/admin/transactions'),
   updateUser: (id, payload) => apiFetch(`/admin/users/${encodeURIComponent(id)}`, { method: 'PATCH', body: payload }),
   deleteUser: (id) => apiFetch(`/admin/users/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 }

@@ -39,9 +39,25 @@ class AdminController extends Controller
     
     public function stats(Request $request)
     {
+        $totalRevenue = \App\Models\Transaction::where('payment_status', 'paid')->sum('amount');
+        $paidCount = \App\Models\Transaction::where('payment_status', 'paid')->count();
+        $pendingCount = \App\Models\Transaction::where('payment_status', 'pending')->count();
+
         return [
             'total_users' => User::count(),
             'total_admins' => User::where('role', 'admin')->count(),
+            'total_revenue' => (int) $totalRevenue,
+            'paid_transactions' => $paidCount,
+            'pending_transactions' => $pendingCount,
         ];
+    }
+
+    public function transactions(Request $request)
+    {
+        $transactions = \App\Models\Transaction::with('invitation.user')
+            ->orderByDesc('created_at')
+            ->paginate(30);
+
+        return $transactions;
     }
 }

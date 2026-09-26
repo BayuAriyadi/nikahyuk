@@ -87,7 +87,7 @@ function RoleSelect({ currentRole, onChange, disabled }) {
   )
 }
 
-export default function Admin() {
+export default function AdminUsers() {
   const { user } = useAuth()
   const [users, setUsers] = useState([])
   const [stats, setStats] = useState(null)
@@ -155,9 +155,9 @@ export default function Admin() {
   return (
     <section>
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Superadmin</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Pengguna</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Kelola akun pengguna dan lihat statistik platform.
+          Kelola akun pengguna platform.
         </p>
       </header>
 
