@@ -516,6 +516,22 @@
   height: auto;
 }
 
+/* Pemicu lightbox: <button> di dalam figure mengisi penuh bingkai tanpa
+   menambah ruang, supaya ritme kolase tidak berubah. */
+.el-shot > button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.el-shot > button:focus-visible {
+  outline: 2px solid var(--color-rose-500, #a89a86);
+  outline-offset: 2px;
+}
+
 /* Ritme: foto tertentu berbingkai arch supaya kolase tidak monoton. */
 .el-shot-arch {
   border-radius: 999px 999px 0 0;

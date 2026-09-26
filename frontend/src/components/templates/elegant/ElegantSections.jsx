@@ -14,6 +14,7 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import Icon from '../../Icon.jsx'
+import Lightbox from '../../Lightbox.jsx'
 import { copyText } from '../../../lib/clipboard.js'
 
 const DATE_FMT = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -332,6 +333,7 @@ function useCountdown(target) {
  */
 export function ElegantGallery({ photos }) {
   const items = useMemo(() => (Array.isArray(photos) ? photos.filter(Boolean) : []), [photos])
+  const [active, setActive] = useState(-1)
   if (!items.length) return null
 
   // Foto ke-2, ke-5, dst. dibingkai arch supaya ritmenya tidak monoton.
@@ -353,10 +355,16 @@ export function ElegantGallery({ photos }) {
       <div className="el-masonry" data-anim="stagger" data-anim-stagger="0.08">
         {items.map((url, index) => (
           <figure key={url} className={arched.has(url) ? 'el-shot el-shot-arch' : 'el-shot'}>
-            <img src={url} alt={`Momen ${index + 1}`} loading="lazy" />
+            <button type="button" onClick={() => setActive(index)} aria-label={`Buka foto ${index + 1}`}>
+              <img src={url} alt={`Momen ${index + 1}`} loading="lazy" />
+            </button>
           </figure>
         ))}
       </div>
+
+      {active >= 0 && (
+        <Lightbox photos={items} index={active} onChange={setActive} onClose={() => setActive(-1)} />
+      )}
     </section>
   )
 }

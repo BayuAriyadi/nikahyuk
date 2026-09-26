@@ -7,11 +7,46 @@ import { useGuests } from '../hooks/useGuests.js'
 import { useInvitations } from '../hooks/useInvitations.js'
 import { guestsApi } from '../lib/api.js'
 import { invitationGuestUrl, whatsappGuestShareUrl } from '../lib/share.js'
+import { downloadCsv } from '../lib/csv.js'
 import { timeAgo } from '../lib/time.js'
+
+/* Label status kehadiran untuk CSV (bukan untuk badge UI). */
+const RSVP_LABEL = {
+  attending: 'Hadir',
+  not_attending: 'Berhalangan',
+  pending: 'Belum konfirmasi',
+}
+
+/**
+ * Ekspor tamu yang sedang tampil ke CSV.
+ *
+ * Yang diekspor mengikuti daftar di layar (`list`), jadi hasilnya sesuai
+ * dengan yang dilihat user — termasuk saat kotak pencarian sedang terisi.
+ */
+function exportGuests(list) {
+  if (!list.length) return
+  const rows = [
+    ['Nama', 'Status', 'Undangan', 'Ucapan', 'Link undangan', 'Waktu RSVP'],
+    ...list.map((guest) => {
+      const invitation = guest.invitation
+      const couple = [invitation?.groom, invitation?.bride].filter(Boolean).join(' & ')
+      return [
+        guest.name,
+        RSVP_LABEL[guest.rsvp_status] ?? guest.rsvp_status,
+        couple,
+        guest.message ?? '',
+        invitationGuestUrl(invitation?.slug, guest.name),
+        guest.created_at ? new Date(guest.created_at).toLocaleString('id-ID') : '',
+      ]
+    }),
+  ]
+
+  downloadCsv(`daftar-tamu-${new Date().toISOString().slice(0, 10)}.csv`, rows)
+}
 
 /*
  * Dashboard "Daftar Tamu" (fase 3): rekap kehadiran, tambah nama manual,
- * tombol WhatsApp pribadi per tamu (tautan ?to=Nama), dan hapus tamu.
+ * tombol WhatsApp pribadi per tamu (tautan ?to=Nama), hapus tamu, dan ekspor CSV.
  *
  * - Tamu yang RSVP sendiri lewat undangan otomatis masuk daftar ini.
  * - Yang ditambahkan manual mulai dari status "Belum konfirmasi".
@@ -160,14 +195,30 @@ export default function Guests() {
             belum konfirmasi sampai dia membuka undangannya.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setAddOpen(true)}
-          disabled={loadingInvitations || publishedInvitations.length === 0}
-          className="rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          + Tambah tamu
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => exportGuests(filtered)}
+            disabled={loading || filtered.length === 0}
+            title={
+              filtered.length !== guests.length
+                ? `Ekspor ${filtered.length} tamu yang sedang tampil`
+                : 'Unduh daftar tamu sebagai CSV'
+            }
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Icon name="download" className="h-4 w-4" />
+            {filtered.length !== guests.length ? `Ekspor ${filtered.length}` : 'Ekspor CSV'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setAddOpen(true)}
+            disabled={loadingInvitations || publishedInvitations.length === 0}
+            className="rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            + Tambah tamu
+          </button>
+        </div>
       </header>
 
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">

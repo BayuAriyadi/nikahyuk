@@ -110,6 +110,7 @@ Halaman **Daftar Tamu** (`/dashboard/tamu`) dan **Buku Ucapan** (`/dashboard/uca
 - **Dedupe RSVP**: kalau tamu mengisi RSVP dengan nama yang sudah ada di daftar (beda kapital pun), baris lama yang diperbarui, bukan ditambah. Rekap tidak pernah dobel.
 - **Hapus tamu** (`DELETE /api/guests/{id}`) untuk membersihkan daftar.
 - **Buku Ucapan** menampilkan semua ucapan (hanya tamu yang mengisi pesan), dengan filter per undangan bila lebih dari satu.
+- **Ekspor CSV** (`src/lib/csv.js`): tombol "Ekspor CSV" mengunduh daftar tamu yang sedang tampil — mengikuti kotak pencarian, jadi bisa mengekspor sebagian (labelnya berubah jadi "Ekspor N"). Berkasnya ber-BOM UTF-8 (Excel Windows tidak merusak karakter Indonesia) dan nilai berawalan `= + - @` diamankan dengan apostrof supaya tidak dieksekusi sebagai rumus saat dibuka.
 
 Halaman undangan publik menyapa tamu di cover bila URL memuat `?to=` (`src/pages/PublicInvitation.jsx`), maksimal 100 karakter.
 
@@ -140,7 +141,6 @@ Alur: `/lupa-password` (minta tautan) → email → `/reset-password?token=...&e
 
 > Mailer project masih `log`: tautan reset muncul di `storage/logs/laravel.log`, belum terkirim ke email sungguhan. Untuk produksi, set `MAIL_MAILER=smtp` + kredensial SMTP di `.env`.
 
-## Statistik kunjungan
 
 Halaman publik yang dibuka tamu menaikkan `visit_count` + `last_visited_at` di baris undangan (kolom baru, migrasi `2026_09_25_100002`).
 
@@ -183,6 +183,9 @@ Tombol masuk ke halaman ini: "+ Buat Undangan Baru" dan CTA daftar kosong di
 - `InvitationPreview.jsx`: merender halaman tamu yang sama tanpa buku ucapan, musik, dan penghitung kunjungan. Section-nya diimpor dari `pages/PublicInvitation.jsx` (`Cover`, `CoupleSection`, `EventsSection`, `CountdownSection`, `GallerySection`, `StorySection`, `GiftSection`, `eventMainMoment`) supaya pratinjau tidak pernah berbeda dari halaman asli. Tanpa prop `data`, dipakai `SAMPLE_PREVIEW` (pasangan fiktif).
 - Kelas `ny-preview` mengecilkan cover (yang aslinya `min-h-svh`) supaya pas digulir di dalam modal; diatur di `src/templates.css`.
 - `TemplatePreviewModal.jsx`: modal pratinjau satu template; di landing, tombolnya mengantar ke register/dashboard.
+- Lightbox galeri ada di `components/Lightbox.jsx` dan dipakai bersama: `GallerySection`
+  (template generik) maupun `ElegantGallery`. Panah/geser pindah foto, Esc menutup, scroll
+  halaman dikunci selama terbuka.
 
 ## Template undangan (klasik / minimalis / floral / ceria)
 
@@ -205,6 +208,19 @@ Cara kerja:
 Menambah template baru: tambah entri di `TEMPLATES`, blok `[data-template='...']` di `templates.css`, dan nama di rule `in:` kedua FormRequest (plus `$catalog` di `tests/manual/verify_task13.php`, yang menguji katalog penuh). Backend menolak nama di luar katalog dengan 422.
 
 Catatan template **ceria**: palet krem-marun + tulisan tangan (`Caveat`) + judul bulat (`Baloo 2`), keduanya self-hosted di `public/fonts/`. Ornamen (tangkai, untaian mutiara, coretan bawah judul, bintik) digambar sebagai mask SVG data-URI di custom property, jadi satu blok CSS menangani semua bentuk tanpa komponen React baru dan warnanya ikut palet. Nama di cover memakai `clamp()` supaya nama panjang membungkus rapi di layar 390px, bukan melimpah keluar bingkai.
+
+## Template elegan
+
+Template kelima (`elegan`) tidak memakai susunan section generik: seluruh halaman dirender
+oleh `components/templates/elegant/ElegantSections.jsx` dengan mesin animasi GSAP
+(`lib/useInvitationMotion.js`) dan stylesheet sendiri (`src/elegant.css`).
+
+Animasi dikendalikan atribut `data-*` (lihat daftar efek di `useInvitationMotion.js`).
+Aturan yang mudah dilanggar: **satu sumber animasi per elemen**. Jangan menaruh `data-anim`
+pada anak di dalam wadah `data-anim="stagger"` — dua tween `gsap.from()` akan berebut elemen
+yang sama dan anaknya berhenti di opacity 0.
+
+Galeri memakai kolom CSS (`.el-masonry`) dengan bingkai arch pada foto ke-2, ke-5, dst.
 
 ## Build produksi
 

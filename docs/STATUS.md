@@ -153,6 +153,11 @@ Undangan Baru", dan "Pratinjau undangan". Singkatnya:
   mengulang dari langkah 1.
 - Pratinjau dan galeri memakai ulang section halaman tamu yang di-ekspor dari
   `pages/PublicInvitation.jsx`, jadi tampilannya tidak bisa berbeda dari undangan asli.
+- Export CSV daftar tamu (`lib/csv.js`, tombol "Ekspor CSV" di Daftar Tamu): mengikuti
+  filter pencarian yang sedang aktif, BOM UTF-8 supaya Excel Windows tidak merusak karakter
+  Indonesia, dan nilai berawalan `= + - @` dikutip (bisa jadi rumus berbahaya saat dibuka).
+- Lightbox galeri jadi komponen bersama (`components/Lightbox.jsx`, tadinya cuma ada di
+  PublicInvitation) dan kini terpasang juga di galeri template elegan.
 - **Optimisasi foto (WebP + resize)**: klien (`frontend/src/lib/image.js`) mengecilkan sisi
   terpanjang ke 1600 px dan meng-encode WebP q0.82 di canvas sebelum upload (fallback JPEG
   q0.85 kalau canvas WebP tidak tersedia). Server (`PhotoController`) menyimpan ulang sebagai
