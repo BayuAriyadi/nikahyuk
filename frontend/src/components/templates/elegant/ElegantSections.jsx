@@ -346,9 +346,13 @@ export function ElegantGallery({ photos }) {
         Our <em>Moments</em>
       </h2>
 
+      {/* Cukup satu sumber animasi: stagger di container. Menambah data-anim
+          pada anak membuat dua tween gsap.from() berebut elemen yang sama —
+          yang kedua merekam opacity 0 (sisa tween parent) sebagai nilai akhir,
+          sehingga foto berhenti transparan. */}
       <div className="el-masonry" data-anim="stagger" data-anim-stagger="0.08">
         {items.map((url, index) => (
-          <figure key={url} className={arched.has(url) ? 'el-shot el-shot-arch' : 'el-shot'} data-anim="frame">
+          <figure key={url} className={arched.has(url) ? 'el-shot el-shot-arch' : 'el-shot'}>
             <img src={url} alt={`Momen ${index + 1}`} loading="lazy" />
           </figure>
         ))}

@@ -215,6 +215,10 @@ diperiksa dengan mata di `/` (bagian `#template`) karena itu murni soal tampilan
   (dipakai `backfill_webp.php`). Jangan andalkan `php` CLI untuk operasi file di `gallery/`.
 - **`upload_max_filesize=2M`** di php.ini userland: foto kamera besar langsung ke API gagal
   (422). Klien sudah resize sebelum upload, jadi jalur normal aman.
+- **GSAP: jangan tumpuk `data-anim` pada anak di dalam `data-anim="stagger"`** — dua tween
+  `gsap.from()` berebut elemen yang sama; yang kedua merekam keadaan sisa tween pertama
+  (opacity 0) sebagai nilai akhir, jadi elemen berhenti tak terlihat. Kasus nyata: galeri
+  template elegan tampil kosong (foto ada di DOM, opacity 0). Satu sumber animasi per elemen.
 - **Vite blokir Host header tunnel** → 403; sudah ditangani `allowedHosts` di `vite.config.js`.
 - **Tailscale Funnel butuh `--statedir`** (lihat bagian akses di atas).
 - **DNS fake-IP di kontainer** → jangan simpulkan tunnel mati dari curl internal.
