@@ -131,6 +131,24 @@ Lagu dipilih dari **Edit undangan → Musik Latar**: satu berkas per undangan (M
 - Tombol speaker baru muncul setelah undangan dibuka, dan ikut hilang otomatis bila `music_enabled` dimatikan atau URL lagu kosong.
 - `music_url` hanya menerima `https?://` atau `/storage/music/...` (regex di `Store`/`UpdateInvitationRequest`), jadi tidak bisa diisi `javascript:`.
 
+## Pengaturan akun
+
+Halaman `/dashboard/pengaturan` (`pages/Settings.jsx`) berisi satu kartu: ganti password.
+
+- Form wajib **password saat ini** (`current_password`) + password baru + konfirmasi.
+  Password saat ini dipakai agar akun yang tertinggal terbuka di perangkat lain tidak bisa
+  diganti passwordnya tanpa tahu password lama.
+- Validasi backend (`ChangePasswordRequest`): minimal 8 karakter, harus `confirmed`, dan harus
+  `different:current_password`.
+- **Begitu berhasil, server mencabut semua token user** — termasuk token yang dipakai request
+  itu sendiri. Klien tidak punya pilihan selain mengakhiri sesi dan mengantar ke `/login`.
+- Penanda "password baru saja diganti" dikirim lewat `sessionStorage`
+  (`nikahyuk.passwordChanged`), **bukan** `router state`: ProtectedRoute mengarahkan ke `/login`
+  dengan `state.from` sendiri dan menimpa state yang kita kirim, jadi pesan berbasis state hilang
+  di tengah jalan. Flag dibaca sekali lalu dihapus.
+- Baris kekuatan password di bawah kolom password baru murni indikator klien (panjang, campuran
+  huruf/angka/simbol); tidak pernah memblokir kirim.
+
 ## Lupa password (fase 4)
 
 Alur: `/lupa-password` (minta tautan) → email → `/reset-password?token=...&email=...` (set password baru) → login ulang.

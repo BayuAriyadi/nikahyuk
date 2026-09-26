@@ -110,6 +110,8 @@ Publik:
 Auth (Sanctum bearer):
 - `POST /api/register`, `POST /api/login`, `POST /api/logout`, `GET /api/user`
 - `POST /api/forgot-password`, `POST /api/reset-password`
+- `POST /api/change-password` — ganti password sendiri, wajib `current_password`;
+  berhasilnya mencabut **semua** token user (semua perangkat dikeluarkan)
 - `GET|POST /api/invitations`, `DELETE /api/invitations/{id}` (owner-only)
 - `GET|POST /api/guests`, `DELETE /api/guests/{id}`
 - `POST /api/invitations/{id}/photos`, `POST /api/invitations/{id}/music`
@@ -178,7 +180,9 @@ Undangan Baru", dan "Pratinjau undangan". Singkatnya:
    driver + isi kredensial produksi + set webhook URL ke domain publik.
 3. **Deploy produksi belum** — belum ada host/domain final. Opsional: subdomain
    `undangan.pujin.my.id` lewat Cloudflare Tunnel bernama (butuh 1 klik login Cloudflare dari user).
-4. **URL akses** masih nama node Tailscale (`7e07bbd09d70.tail099f48.ts.net`), belum domain cantik.
+4. **Hapus akun sendiri belum ada** — tombol hapus akun + datanya (undangan, foto, tamu) belum
+   dibuat. Endpoint admin `DELETE /api/admin/users/{id}` sudah ada, tapi itu untuk superadmin.
+5. **URL akses** masih nama node Tailscale (`7e07bbd09d70.tail099f48.ts.net`), belum domain cantik.
 
 ## Verifikasi
 
@@ -193,7 +197,7 @@ php tests/manual/verify_task2.php && bash tests/manual/smoke_task2.sh | tail -1
 
 Status terakhir semua hijau: task2 45/45, task3 24/24, task4 24/24, task5 63/63, task9 27/27,
 task10 40/40, task11 20/20, task12 18/18, task13 16/16, smoke_delete 13/13, smoke_task2 13/13,
-photo_webp 17/17, admin_free_publish 20/20.
+photo_webp 17/17, admin_free_publish 20/20, change_password 16/16.
 
 **Urutan penting**: `smoke_task2.sh` memakai `/opt/data/cache/scratch/task2_fixtures.json`
 (token + id undangan) yang ditulis ulang oleh `verify_task2.php`. **Beberapa harness lain

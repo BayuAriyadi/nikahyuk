@@ -108,6 +108,8 @@ export const authApi = {
   /** Simpan password baru dari tautan reset. */
   resetPassword: (payload) =>
     apiFetch('/reset-password', { method: 'POST', body: payload, auth: false }),
+  /** Ganti password sendiri; wajib password saat ini. */
+  changePassword: (payload) => apiFetch('/change-password', { method: 'POST', body: payload }),
 }
 
 /**

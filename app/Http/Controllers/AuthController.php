@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
@@ -63,6 +64,42 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()?->delete();
 
         return response()->noContent();
+    }
+
+    /**
+     * Ganti password milik user yang sedang masuk.
+     *
+     * Wajib menyertakan password saat ini (current_password) supaya akun yang
+     * ditinggal terbuka di perangkat lain tidak bisa dipakai mengganti password
+     * tanpa tahu password lamanya.
+     *
+     * Semua token lama dicabut sesudah berhasil: sesi lain harus masuk ulang.
+     * Token yang dipakai request ini ikut terhapus, jadi responsnya sekaligus
+     * berarti "silakan masuk lagi" — klien cukup membersihkan sesi lokal.
+     */
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $validated = $request->validated();
+
+        if (! Hash::check($validated['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Password saat ini salah.'],
+            ]);
+        }
+
+        $user->forceFill([
+            'password' => $validated['password'],
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        $user->tokens()->delete();
+
+        event(new PasswordReset($user));
+
+        return response()->json([
+            'message' => 'Password berhasil diganti. Silakan masuk lagi dengan password baru.',
+        ]);
     }
 
     /**

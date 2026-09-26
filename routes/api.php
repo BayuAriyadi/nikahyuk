@@ -79,6 +79,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Revoke the token used for this request.
     Route::post('/logout', [AuthController::class, 'logout']);
 
+    // Ganti password sendiri (wajib password saat ini). Throttle ketat: ini
+    // endpoint empuk untuk brute-force password jika tidak dibatasi.
+    Route::post('/change-password', [AuthController::class, 'changePassword'])
+        ->middleware('throttle:10,1,change-password');
+
     // Owner: list own invitations — halaman "Undangan Saya".
     Route::get('/invitations', [InvitationController::class, 'index']);
 

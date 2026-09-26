@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout.jsx'
 import { Alert, Field, SubmitButton } from '../components/form.jsx'
@@ -13,6 +13,16 @@ export default function Login() {
   const [fieldErrors, setFieldErrors] = useState({})
   const [formError, setFormError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+
+  // Pesan dari halaman Pengaturan: password baru saja diganti, semua sesi dicabut.
+  // Flag dibaca sekali lalu dihapus supaya tidak muncul lagi setelah refresh.
+  const [passwordChanged, setPasswordChanged] = useState(
+    () => sessionStorage.getItem('nikahyuk.passwordChanged') === '1',
+  )
+
+  useEffect(() => {
+    if (passwordChanged) sessionStorage.removeItem('nikahyuk.passwordChanged')
+  }, [passwordChanged])
 
   function update(field) {
     return (event) => {
@@ -64,6 +74,14 @@ export default function Login() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        {passwordChanged && !formError && (
+          <div
+            role="status"
+            className="rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm leading-6 text-emerald-800"
+          >
+            Password kamu sudah diganti. Masuk dengan password baru.
+          </div>
+        )}
         {formError && <Alert>{formError}</Alert>}
 
         <Field

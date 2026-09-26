@@ -11,10 +11,10 @@ import Login from './pages/Login.jsx'
 import Landing from './pages/Landing.jsx'
 import Messages from './pages/Messages.jsx'
 import Overview from './pages/Overview.jsx'
-import Placeholder from './pages/Placeholder.jsx'
 import PublicInvitation from './pages/PublicInvitation.jsx'
 import Register from './pages/Register.jsx'
 import ResetPassword from './pages/ResetPassword.jsx'
+import Settings from './pages/Settings.jsx'
 
 export default function App() {
   return (
@@ -60,15 +60,7 @@ export default function App() {
         <Route path="admin" element={<Navigate to="/dashboard/admin/users" replace />} />
         <Route path="admin/users" element={<AdminUsers />} />
         <Route path="admin/pendapatan" element={<AdminRevenue />} />
-        <Route
-          path="pengaturan"
-          element={
-            <Placeholder
-              title="Pengaturan"
-              copy="Pengaturan akun dan keamanan akan tersedia di sini."
-            />
-          }
-        />
+        <Route path="pengaturan" element={<Settings />} />
       </Route>
 
       {/* Undangan publik tamu: satu segmen path diperlakukan sebagai slug, contoh /anto-sumanto.
