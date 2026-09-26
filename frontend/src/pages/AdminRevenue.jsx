@@ -2,6 +2,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { adminApi } from '../lib/api.js'
 import { useAuth } from '../context/AuthContext.jsx'
 
+const formatRupiah = (val) =>
+  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val || 0)
+
+const shortRupiah = (val) =>
+  val >= 1_000_000
+    ? `${(val / 1_000_000).toFixed(1).replace('.', ',')}jt`
+    : val >= 1_000
+      ? `${Math.round(val / 1_000)}rb`
+      : `${val}`
+
 function StatCard({ label, value, tone = 'slate' }) {
   const tones = {
     slate: 'text-slate-900',
@@ -13,6 +23,70 @@ function StatCard({ label, value, tone = 'slate' }) {
     <div className="rounded-2xl border border-slate-200 bg-white p-4">
       <p className="text-xs text-slate-500">{label}</p>
       <p className={`mt-1 text-xl font-semibold tracking-tight ${tones[tone]}`}>{value}</p>
+    </div>
+  )
+}
+
+/** Grafik batang pendapatan 6 bulan terakhir — div + CSS, tanpa library. */
+function RevenueChart({ series }) {
+  const [grown, setGrown] = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setGrown(true), 60)
+    return () => clearTimeout(t)
+  }, [])
+
+  const months = useMemo(() => {
+    const now = new Date()
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      const found = series.find((s) => s.month === key)
+      return {
+        key,
+        label: d.toLocaleDateString('id-ID', { month: 'short' }),
+        total: Number(found?.total || 0),
+        count: Number(found?.count || 0),
+      }
+    })
+  }, [series])
+
+  const max = Math.max(...months.map((m) => m.total), 1)
+  const totalAll = months.reduce((acc, m) => acc + m.total, 0)
+
+  return (
+    <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="text-sm font-semibold text-slate-900">Pendapatan 6 Bulan Terakhir</h2>
+        <span className="text-xs text-slate-500">{formatRupiah(totalAll)}</span>
+      </div>
+
+      <div className="mt-4 flex items-end gap-2 sm:gap-3" style={{ height: 170 }}>
+        {months.map((m) => {
+          const barPx = m.total > 0 ? Math.max(6, Math.round((m.total / max) * 124)) : 3
+          return (
+            <div key={m.key} className="flex flex-1 flex-col items-center justify-end gap-1 self-stretch">
+              <span className="text-[10px] font-medium text-slate-500">
+                {m.total > 0 ? shortRupiah(m.total) : ''}
+              </span>
+              <div
+                className={`w-full max-w-14 rounded-t-md transition-all duration-700 ease-out ${
+                  m.total > 0 ? 'bg-gradient-to-t from-rose-500 to-rose-400' : 'bg-slate-100'
+                }`}
+                style={{ height: grown ? barPx : 0 }}
+                title={`${m.label}: ${m.count} transaksi · ${formatRupiah(m.total)}`}
+              />
+              <span className="text-[10px] text-slate-400">{m.label}</span>
+            </div>
+          )
+        })}
+      </div>
+
+      {totalAll === 0 && (
+        <p className="mt-2 text-center text-xs text-slate-400">
+          Belum ada pendapatan — grafik terisi otomatis saat ada transaksi berhasil.
+        </p>
+      )}
     </div>
   )
 }
@@ -36,14 +110,16 @@ export default function AdminRevenue() {
   const { user } = useAuth()
   const [stats, setStats] = useState(null)
   const [transactions, setTransactions] = useState([])
+  const [series, setSeries] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
 
   useEffect(() => {
-    Promise.all([adminApi.getStats(), adminApi.listTransactions()])
-      .then(([statsRes, txRes]) => {
+    Promise.all([adminApi.getStats(), adminApi.listTransactions(), adminApi.getRevenueSeries()])
+      .then(([statsRes, txRes, seriesRes]) => {
         setStats(statsRes)
         setTransactions(txRes.data || [])
+        setSeries(Array.isArray(seriesRes) ? seriesRes : seriesRes.data || [])
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))
@@ -69,9 +145,6 @@ export default function AdminRevenue() {
       </div>
     )
   }
-
-  const formatRupiah = (val) =>
-    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val || 0)
 
   return (
     <section>
@@ -99,6 +172,8 @@ export default function AdminRevenue() {
           />
         </div>
       )}
+
+      <RevenueChart series={series} />
 
       <div className="mt-6 flex items-center justify-between">
         <div className="flex gap-2">

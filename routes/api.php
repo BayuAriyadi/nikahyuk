@@ -117,5 +117,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/users/{user}', [AdminController::class, 'destroy']);
         Route::get('/stats', [AdminController::class, 'stats']);
         Route::get('/transactions', [AdminController::class, 'transactions']);
+        Route::get('/revenue-series', [AdminController::class, 'revenueSeries']);
     });
 });

@@ -60,4 +60,15 @@ class AdminController extends Controller
 
         return $transactions;
     }
+
+    /** Rekap pendapatan bulanan (paid) 6 bulan terakhir untuk grafik. */
+    public function revenueSeries(Request $request)
+    {
+        return \App\Models\Transaction::where('payment_status', 'paid')
+            ->where('paid_at', '>=', now()->subMonths(5)->startOfMonth())
+            ->selectRaw("to_char(paid_at, 'YYYY-MM') as month, sum(amount) as total, count(*) as count")
+            ->groupByRaw("to_char(paid_at, 'YYYY-MM')")
+            ->orderBy('month')
+            ->get();
+    }
 }
