@@ -84,6 +84,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/change-password', [AuthController::class, 'changePassword'])
         ->middleware('throttle:10,1,change-password');
 
+    // Tutup akun sendiri: hapus permanen user + undangan + berkas. Throttle
+    // ketat karena endpoint ini tidak bisa dibatalkan (bukan sekadar lambat).
+    Route::delete('/account', [AuthController::class, 'destroyAccount'])
+        ->middleware('throttle:5,1,destroy-account');
+
     // Owner: list own invitations — halaman "Undangan Saya".
     Route::get('/invitations', [InvitationController::class, 'index']);
 

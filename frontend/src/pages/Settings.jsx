@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Alert, Field, SubmitButton } from '../components/form.jsx'
 import Icon from '../components/Icon.jsx'
+import DeleteAccountModal from '../components/DeleteAccountModal.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useInvitations } from '../hooks/useInvitations.js'
 import { authApi } from '../lib/api.js'
 
 /*
@@ -47,6 +49,9 @@ const TIER_TEXT = {
 export default function Settings() {
   const navigate = useNavigate()
   const { logout } = useAuth()
+  const { invitations, loading: invitationsLoading } = useInvitations()
+
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   const [form, setForm] = useState({
     current_password: '',
@@ -111,6 +116,21 @@ export default function Settings() {
 
   function markFieldError(field, message) {
     setFieldErrors((prev) => ({ ...prev, [field]: message }))
+  }
+
+  /**
+   * Akun sudah dihapus server: token mati, dashboard tidak bisa dipakai lagi.
+   * Bersihkan sesi lokal lalu keluar ke landing — bukan ke /login, karena
+   * emailnya sudah tidak terdaftar.
+   */
+  async function handleAccountDeleted() {
+    setDeleteOpen(false)
+    try {
+      await logout()
+    } catch {
+      // Token sudah tidak berlaku; sesi lokal tetap dibersihkan oleh logout().
+    }
+    navigate('/', { replace: true })
   }
 
   // Begitu berhasil: token sudah mati di server, bersihkan sesi lokal.
@@ -233,6 +253,42 @@ export default function Settings() {
           )}
         </div>
       </div>
+
+      <div className="overflow-hidden rounded-2xl border border-rose-200 bg-white">
+        <div className="flex items-center gap-3 border-b border-rose-100 px-5 py-4">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+            <Icon name="trash" className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-slate-900">Tutup akun</h2>
+            <p className="text-xs text-slate-500">
+              Hapus akun beserta semua undangan dan foto. Tidak bisa dibatalkan.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-5">
+          <p className="max-w-md text-sm leading-6 text-slate-600">
+            Semua undangan{invitationsLoading ? '' : ` (${invitations.length})`}, tamu, ucapan, dan
+            foto akan hilang permanen. Riwayat pembayaran tetap disimpan sebagai catatan keuangan.
+          </p>
+          <button
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+            className="shrink-0 rounded-lg border border-rose-300 bg-white px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+          >
+            Tutup akun saya
+          </button>
+        </div>
+      </div>
+
+      {deleteOpen && (
+        <DeleteAccountModal
+          invitations={invitations}
+          onClose={() => setDeleteOpen(false)}
+          onDeleted={handleAccountDeleted}
+        />
+      )}
     </section>
   )
 }

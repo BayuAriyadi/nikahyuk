@@ -112,6 +112,9 @@ Auth (Sanctum bearer):
 - `POST /api/forgot-password`, `POST /api/reset-password`
 - `POST /api/change-password` — ganti password sendiri, wajib `current_password`;
   berhasilnya mencabut **semua** token user (semua perangkat dikeluarkan)
+- `DELETE /api/account` — tutup akun sendiri, wajib password + frasa konfirmasi
+  persis `HAPUS AKUN SAYA`. Menghapus user, undangan, tamu, dan berkas foto.
+  **Transaksi pembayaran sengaja dipertahankan** (lihat catatan di bawah).
 - `GET|POST /api/invitations`, `DELETE /api/invitations/{id}` (owner-only)
 - `GET|POST /api/guests`, `DELETE /api/guests/{id}`
 - `POST /api/invitations/{id}/photos`, `POST /api/invitations/{id}/music`
@@ -180,9 +183,7 @@ Undangan Baru", dan "Pratinjau undangan". Singkatnya:
    driver + isi kredensial produksi + set webhook URL ke domain publik.
 3. **Deploy produksi belum** — belum ada host/domain final. Opsional: subdomain
    `undangan.pujin.my.id` lewat Cloudflare Tunnel bernama (butuh 1 klik login Cloudflare dari user).
-4. **Hapus akun sendiri belum ada** — tombol hapus akun + datanya (undangan, foto, tamu) belum
-   dibuat. Endpoint admin `DELETE /api/admin/users/{id}` sudah ada, tapi itu untuk superadmin.
-5. **URL akses** masih nama node Tailscale (`7e07bbd09d70.tail099f48.ts.net`), belum domain cantik.
+4. **URL akses** masih nama node Tailscale (`7e07bbd09d70.tail099f48.ts.net`), belum domain cantik.
 
 ## Verifikasi
 
@@ -197,7 +198,7 @@ php tests/manual/verify_task2.php && bash tests/manual/smoke_task2.sh | tail -1
 
 Status terakhir semua hijau: task2 45/45, task3 24/24, task4 24/24, task5 63/63, task9 27/27,
 task10 40/40, task11 20/20, task12 18/18, task13 16/16, smoke_delete 13/13, smoke_task2 13/13,
-photo_webp 17/17, admin_free_publish 20/20, change_password 16/16.
+photo_webp 17/17, admin_free_publish 20/20, change_password 16/16, delete_account 30/30.
 
 **Urutan penting**: `smoke_task2.sh` memakai `/opt/data/cache/scratch/task2_fixtures.json`
 (token + id undangan) yang ditulis ulang oleh `verify_task2.php`. **Beberapa harness lain
@@ -215,6 +216,24 @@ Wizard & galeri diuji lewat browser sungguhan (bukan hanya build): pilih templat
 unggah foto → jadikan cover → pratinjau → bayar QRIS simulasi (`php artisan payments:simulate
 <order_id>`) → undangan terbit. Perubahan pada `InvitationPreview`/`TemplateCard` sebaiknya
 diperiksa dengan mata di `/` (bagian `#template`) karena itu murni soal tampilan.
+
+## Keputusan yang sudah dikunci
+
+- **Transaksi pembayaran tidak pernah ikut terhapus.** Migrasi
+  `2026_09_26_120000_retain_transactions_on_invitation_delete` mengubah FK
+  `transactions.invitation_id` dari `ON DELETE CASCADE` menjadi `ON DELETE SET NULL`.
+  Alasannya: catatan pembayaran adalah dokumen keuangan — rekap pendapatan admin tidak boleh
+  berubah mundur hanya karena pemilik menutup akun atau menghapus undangan. Data pribadi hilang
+  semua; yang tersisa di `transactions` hanya order_id/amount/status, tanpa identitas tamu.
+- **Hapus undangan dan tutup akun berbagi satu jalur**: `app/Support/InvitationDestroyer.php`.
+  Dulu `InvitationController::destroy` punya logikanya sendiri; kalau dua jalur berbeda, salah
+  satunya bisa meninggalkan berkas foto yatim di `storage/app/public/gallery/`.
+- **Jangan taruh rute dev di dalam grup `auth:sanctum`.**Grup itu mengharuskan token; middleware
+  autentikasi lalu memanggil `route('login')` yang tidak ada di API, dan hasilnya 500 membingungkan
+  ("Route [login] not defined"), bukan 401. Letakkan rute sementara di luar grup.
+- **`curl` di PHP CLI tidak mengirim permintaan sebelum `curl_exec()` dipanggil** — memanggil
+  `curl_getinfo()` tanpa `curl_exec()` mengembalikan status 0 dengan `curl_error()` kosong, jadi
+  terlihat seperti kegagalan jaringan padahal permintaannya tidak pernah dikirim.
 
 ## Jebakan yang sudah pernah menggigit
 

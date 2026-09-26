@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\DeleteAccountRequest;
 use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Support\InvitationDestroyer;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -99,6 +101,54 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Password berhasil diganti. Silakan masuk lagi dengan password baru.',
+        ]);
+    }
+
+    /**
+     * Hapus akun sendiri beserta seluruh data pribadinya.
+     *
+     * Yang ikut hilang: semua undangan (foto di disk, tamu, buku ucapan),
+     * token sesi, dan baris user itu sendiri. Tidak bisa dibatalkan.
+     *
+     * Yang SENGAJA dipertahankan: tabel `transactions`. Catatan pembayaran
+     * adalah dokumen keuangan — rekap pendapatan tidak boleh berubah mundur
+     * hanya karena pemiliknya menutup akun. FK-nya ON DELETE SET NULL,
+     * jadi transaksi bertahan dengan invitation_id kosong
+     * (lihat migrasi retain_transactions_on_invitation_delete).
+     *
+     * Riwayat transaksi hanya menyimpan order_id/amount/status, tanpa data
+     * pribadi tamu atau mempelai, jadi tidak ada sisa data pribadi di sana.
+     */
+    public function destroyAccount(DeleteAccountRequest $request, InvitationDestroyer $destroyer): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! Hash::check($request->validated('password'), $user->password)) {
+            throw ValidationException::withMessages([
+                'password' => ['Password salah. Akun tidak dihapus.'],
+            ]);
+        }
+
+        $invitations = $user->invitations()->get();
+
+        $summary = [
+            'invitations' => $invitations->count(),
+            'files' => 0,
+            'folders' => 0,
+        ];
+
+        foreach ($invitations as $invitation) {
+            $result = $destroyer->destroy($invitation);
+            $summary['files'] += $result['files'];
+            $summary['folders'] += $result['folders'];
+        }
+
+        $user->tokens()->delete();
+        $user->delete();
+
+        return response()->json([
+            'message' => 'Akun dan semua undangan kamu sudah dihapus permanen.',
+            'deleted' => $summary,
         ]);
     }
 

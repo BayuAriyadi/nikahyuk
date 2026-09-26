@@ -161,17 +161,7 @@ class InvitationController extends Controller
     {
         $this->authorize('delete', $invitation);
 
-        foreach ($this->photoUrls($invitation) as $url) {
-            if (str_starts_with($url, '/storage/')) {
-                Storage::disk('public')->delete(Str::after($url, '/storage/'));
-            }
-        }
-
-        // Sapu sisa berkas di folder galeri dan musik milik undangan ini.
-        Storage::disk('public')->deleteDirectory('gallery/'.$invitation->slug);
-        Storage::disk('public')->deleteDirectory('music/'.$invitation->slug);
-
-        $invitation->delete();
+        app(InvitationDestroyer::class)->destroy($invitation);
 
         return response()->noContent();
     }
@@ -194,26 +184,6 @@ class InvitationController extends Controller
 
             Storage::disk('public')->delete(Str::after($url, '/storage/'));
         }
-    }
-
-    /**
-     * Semua URL foto yang sedang dipakai undangan: galeri, cover, dan foto
-     * profil kedua mempelai.
-     *
-     * @return list<string>
-     */
-    private function photoUrls(Invitation $invitation): array
-    {
-        $urls = array_merge(
-            (array) data_get($invitation->template_config, 'gallery', []),
-            [
-                data_get($invitation->template_config, 'cover_photo'),
-                data_get($invitation->bride_data, 'groom.photo'),
-                data_get($invitation->bride_data, 'bride.photo'),
-            ],
-        );
-
-        return array_values(array_filter($urls, fn ($url) => is_string($url) && $url !== ''));
     }
 
     /**

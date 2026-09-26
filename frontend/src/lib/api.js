@@ -110,6 +110,8 @@ export const authApi = {
     apiFetch('/reset-password', { method: 'POST', body: payload, auth: false }),
   /** Ganti password sendiri; wajib password saat ini. */
   changePassword: (payload) => apiFetch('/change-password', { method: 'POST', body: payload }),
+  /** Tutup akun sendiri permanen; wajib password + frasa konfirmasi. */
+  deleteAccount: (payload) => apiFetch('/account', { method: 'DELETE', body: payload }),
 }
 
 /**

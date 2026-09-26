@@ -149,6 +149,21 @@ Halaman `/dashboard/pengaturan` (`pages/Settings.jsx`) berisi satu kartu: ganti 
 - Baris kekuatan password di bawah kolom password baru murni indikator klien (panjang, campuran
   huruf/angka/simbol); tidak pernah memblokir kirim.
 
+## Tutup akun (hapus akun sendiri)
+
+Kartu **Tutup akun** di `/dashboard/pengaturan` membuka `DeleteAccountModal`: tiga rintangan
+sebelum tombol menyala — ringkasan yang ikut hilang, password saat ini, dan frasa konfirmasi
+persis `HAPUS AKUN SAYA`.
+
+- Frasa itu **divalidasi backend** (`DeleteAccountRequest`), bukan cuma klien, jadi klien tidak
+  pernah jadi satu-satunya penjaga.
+- Ringkasan di modal menampilkan jumlah undangan (dan berapa yang sudah terbit), supaya user
+  melihat konsekuensinya sebelum melangkah.
+- Setelah berhasil: `authApi.deleteAccount` → bersihkan sesi lokal → keluar. Karena ProtectedRoute
+  mengarahkan lebih dulu, ujungnya mendarat di `/login`; emailnya sudah tidak terdaftar lagi.
+- **Riwayat pembayaran tidak dihapus** dan itu disengaja (dijelaskan ke user di modal): catatan
+  pembayaran adalah dokumen keuangan, dan isinya tidak memuat data pribadi tamu.
+
 ## Lupa password (fase 4)
 
 Alur: `/lupa-password` (minta tautan) → email → `/reset-password?token=...&email=...` (set password baru) → login ulang.
