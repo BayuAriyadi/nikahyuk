@@ -6,8 +6,8 @@
  *   php scripts/crop-thumbs.php
  *
  * Membaca  frontend/public/thumbs/<nama>_raw.png  (hasil tangkapan layar
- * peramban, ukuran penuh) lalu menulis <nama>.webp berukuran 480x600
- * (aspect 4/5, sama seperti kartu galeri di landing page).
+ * peramban, ukuran penuh) lalu menulis <nama>.webp berukuran 480x640
+ * (aspect 3:4, sama seperti kartu galeri di landing page).
  *
  * Kompresi WebP kualitas 82 mengikuti kebiasaan unggahan galeri di proyek ini:
  * PNG mentah ~40KB jadi ~8-15KB, sehingga enam thumbnail hanya menambah
@@ -22,7 +22,7 @@ $dir = __DIR__.'/../frontend/public/thumbs';
 $templates = ['klasik', 'minimalis', 'floral', 'ceria', 'elegan'];
 
 $lebar = 480;
-$tinggi = 600;   // 4:5, sama dengan aspect kartu galeri
+$tinggi = 640;   // 3:4 — lebih tinggi dari 4:5, tetapi tidak melonjong
 $kualitas = 82;
 
 $totalMentah = 0;
@@ -52,6 +52,14 @@ foreach ($templates as $nama) {
     $potongH = (int) min($h, $w * ($tinggi / $lebar));
     $potongW = $w;
 
+    // Mengambil dari judul section membuat kartu mempelai kedua kepotong:
+    // kartunya tinggi (foto + nama + panggilan + orang tua). Jadi potongan
+    // digeser ke bawah melewati judul, langsung ke badan kartu.
+    $offsetY = (int) round($w * 0.26);
+    if ($offsetY + $potongH > $h) {
+        $offsetY = max(0, $h - $potongH);
+    }
+
     $thumb = imagecreatetruecolor($lebar, $tinggi);
     // Latar putih lebih aman daripada hitam kalau PNG-nya ber-transparansi.
     imagefill($thumb, 0, 0, imagecolorallocate($thumb, 255, 255, 255));
@@ -59,7 +67,7 @@ foreach ($templates as $nama) {
     imagecopyresampled(
         $thumb, $img,
         0, 0,
-        0, 0,
+        0, $offsetY,
         $lebar, $tinggi,
         $potongW, $potongH
     );

@@ -64,7 +64,7 @@ export default function TemplatesPage() {
               >
                 <TemplatePhoto
                   template={template}
-                  className="aspect-[4/5] w-full rounded-xl ring-1 ring-rose-100/80"
+                  className="aspect-[3/4] w-full rounded-xl ring-1 ring-rose-100/80"
                 />
                 <span className="block px-1.5 pt-3 pb-1">
                   <span className="block font-display text-lg text-slate-900">
