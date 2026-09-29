@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\InvitationDestroyer;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -22,18 +25,29 @@ class AdminController extends Controller
         return response()->json(['status' => 'updated', 'user' => $user]);
     }
 
-    public function destroy(Request $request, User $user)
+    public function destroy(Request $request, User $user): JsonResponse|\Illuminate\Http\Response
     {
-        // Delete related invitations and files
-        foreach ($user->invitations as $invitation) {
-            if ($invitation->photo_path && \Storage::exists($invitation->photo_path)) {
-                \Storage::delete($invitation->photo_path);
-            }
-            // delete files in public/samples related to this invitation
-            $invitation->delete();
+        // Admin yang menghapus dirinya sendiri akan kehilangan token dan akses
+        // panel pada request ini juga. Itu hampir selalu kecelakaan klik.
+        if ($request->user()->id === $user->id) {
+            return response()->json([
+                'message' => 'Tidak bisa menghapus akun sendiri dari panel admin.',
+            ], 422);
         }
-        
-        $user->delete();
+
+        $destroyer = app(InvitationDestroyer::class);
+
+        DB::transaction(function () use ($user, $destroyer) {
+            // Satu jalur dengan hapus akun mandiri: berkas foto ikut dibuang,
+            // bukan cuma baris database. Rekap pendapatan tidak berubah mundur
+            // karena transaksi sengaja dipertahankan (FK SET NULL).
+            foreach ($user->invitations()->get() as $invitation) {
+                $destroyer->destroy($invitation);
+            }
+
+            $user->delete();
+        });
+
         return response()->noContent();
     }
     

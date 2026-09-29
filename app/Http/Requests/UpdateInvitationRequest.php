@@ -32,7 +32,7 @@ class UpdateInvitationRequest extends FormRequest
                 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
                 Rule::unique('invitations', 'slug')->ignore($this->route('invitation')),
             ],
-            'template_name' => ['sometimes', 'string', 'in:klasik,minimalis,floral,ceria,elegan'],
+            'template_name' => ['sometimes', 'string', 'in:klasik,minimalis,floral,ceria,elegan,krem'],
             'status' => ['sometimes', 'string', 'in:draft,published'],
 
             // ----- template_config (JSONB) -----

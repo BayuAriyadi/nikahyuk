@@ -28,7 +28,7 @@ class StoreInvitationRequest extends FormRequest
                 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
                 Rule::unique('invitations', 'slug'),
             ],
-            'template_name' => ['required', 'string', 'in:klasik,minimalis,floral,ceria,elegan'],
+            'template_name' => ['required', 'string', 'in:klasik,minimalis,floral,ceria,elegan,krem'],
 
             // ----- template_config (JSONB) -----
             'template_config' => ['nullable', 'array'],

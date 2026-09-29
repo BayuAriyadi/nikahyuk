@@ -1,7 +1,7 @@
 /*
  * Badge status tamu + labelnya, satu sumber untuk "Daftar Tamu" dan "Buku Ucapan".
  */
-export const GUEST_STATUSES = {
+const GUEST_STATUSES = {
   attending: 'Hadir',
   not_attending: 'Berhalangan',
   pending: 'Belum konfirmasi',

@@ -13,13 +13,18 @@ export function Field({ label, name, type = 'text', value, onChange, error, auto
         onChange={onChange}
         autoComplete={autoComplete}
         placeholder={placeholder}
+        aria-invalid={error ? true : undefined}
         className={`w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:ring-2 ${
           error
             ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
             : 'border-slate-300 focus:border-rose-500 focus:ring-rose-500/20'
         }`}
       />
-      {error && <span className="mt-1 block text-sm text-red-600">{error}</span>}
+      {error && (
+        <span className="mt-1 block text-sm text-red-600" role="alert">
+          {error}
+        </span>
+      )}
     </label>
   )
 }
@@ -34,13 +39,18 @@ export function TextArea({ label, name, value, onChange, error, rows = 3, placeh
         onChange={onChange}
         rows={rows}
         placeholder={placeholder}
+        aria-invalid={error ? true : undefined}
         className={`w-full resize-y rounded-lg border bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:ring-2 ${
           error
             ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
             : 'border-slate-300 focus:border-rose-500 focus:ring-rose-500/20'
         }`}
       />
-      {error && <span className="mt-1 block text-sm text-red-600">{error}</span>}
+      {error && (
+        <span className="mt-1 block text-sm text-red-600" role="alert">
+          {error}
+        </span>
+      )}
     </label>
   )
 }

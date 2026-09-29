@@ -25,9 +25,28 @@ export function useGuests() {
     }
   }, [])
 
+  // Muat awal: semua setState di sini berjalan asinkron (di dalam .then), jadi
+  // tidak memicu render ganda saat effect. `reload` tetap dipakai untuk
+  // refresh manual (setelah tambah/hapus tamu).
   useEffect(() => {
-    reload()
-  }, [reload])
+    let cancelled = false
+
+    guestsApi
+      .list()
+      .then((payload) => {
+        if (!cancelled) setGuests(payload?.data ?? [])
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return { guests, loading, error, reload }
 }

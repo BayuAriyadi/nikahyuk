@@ -20,20 +20,20 @@ import { copyText } from '../../../lib/clipboard.js'
 const DATE_FMT = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
 const DAY_FMT = new Intl.DateTimeFormat('id-ID', { weekday: 'long' })
 
-export function formatDate(iso) {
+function formatDate(iso) {
   if (!iso) return ''
   const d = new Date(`${iso}T00:00:00`)
   return Number.isNaN(d.getTime()) ? '' : DATE_FMT.format(d)
 }
 
-export function formatDay(iso) {
+function formatDay(iso) {
   if (!iso) return ''
   const d = new Date(`${iso}T00:00:00`)
   return Number.isNaN(d.getTime()) ? '' : DAY_FMT.format(d)
 }
 
 /** YYYY-MM-DD -> { day: '30', month: '11', year: '2026' } untuk tata letak bertitik. */
-export function dateParts(iso) {
+function dateParts(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''))
   return m ? { year: m[1], month: m[2], day: m[3] } : null
 }
@@ -93,12 +93,12 @@ export function ElegantCover({ groom, bride, akad, resepsi, coverPhoto, guestNam
 }
 
 /** Cover: dua bingkai arch berisi foto mempelai, nama + orang tua di bawahnya. */
-export function ElegantCouple({ groom, bride }) {
+export function ElegantCouple({ groom, bride, layout = 'arch' }) {
   const people = [groom, bride].filter(Boolean)
   if (!people.length) return null
 
   return (
-    <section id="mempelai" className="el-section">
+    <section id="mempelai" className="el-section" data-couple-layout={layout}>
       <p className="el-kicker" data-anim="fade-up">
         The Bride &amp; Groom
       </p>
@@ -165,6 +165,7 @@ export function ElegantInvitation({
   guestName = '',
   guestSection = null,
   mainMoment = null,
+  coupleLayout = 'arch',
   onOpen,
 }) {
   const photos = Array.isArray(gallery) ? gallery.filter(Boolean) : []
@@ -182,7 +183,7 @@ export function ElegantInvitation({
         onOpen={onOpen}
       />
 
-      <ElegantCouple groom={groom} bride={bride} />
+      <ElegantCouple groom={groom} bride={bride} layout={coupleLayout} />
       <ElegantEvents eventData={eventData} />
       <ElegantCountdown target={mainMoment ?? countdownTarget(eventData)} />
       <ElegantGallery photos={photos} />

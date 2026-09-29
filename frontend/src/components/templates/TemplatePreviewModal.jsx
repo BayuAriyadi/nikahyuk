@@ -1,5 +1,6 @@
 import Modal from '../Modal.jsx'
-import InvitationPreview, { SAMPLE_PREVIEW } from './InvitationPreview.jsx'
+import InvitationPreview from './InvitationPreview.jsx'
+import { SAMPLE_PREVIEW } from '../../lib/samplePreview.js'
 import { templateByName } from '../../lib/invitationPayload.js'
 
 /**

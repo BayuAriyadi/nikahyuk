@@ -31,6 +31,7 @@ export const TEMPLATES = [
     label: 'Klasik',
     description: 'Blush rose hangat dengan serif klasik.',
     swatch: ['#fdf2f8', '#fb7185', '#be123c'],
+    thumb: '/thumbs/klasik.webp',
     reveal: 'up',
     order: ['mempelai', 'cerita', 'acara', 'countdown', 'galeri', 'hadiah', 'ucapan'],
   },
@@ -39,6 +40,7 @@ export const TEMPLATES = [
     label: 'Minimalis',
     description: 'Netral arang, rata kiri, bersih tanpa hiasan.',
     swatch: ['#f8fafc', '#94a3b8', '#334155'],
+    thumb: '/thumbs/minimalis.webp',
     reveal: 'zoom',
     order: ['mempelai', 'acara', 'countdown', 'galeri', 'cerita', 'hadiah', 'ucapan'],
   },
@@ -47,6 +49,7 @@ export const TEMPLATES = [
     label: 'Floral',
     description: 'Sage hijau lembut bernuansa taman.',
     swatch: ['#f0fdf4', '#86efac', '#15803d'],
+    thumb: '/thumbs/floral.webp',
     reveal: 'side',
     order: ['mempelai', 'galeri', 'cerita', 'acara', 'countdown', 'hadiah', 'ucapan'],
   },
@@ -55,6 +58,7 @@ export const TEMPLATES = [
     label: 'Ceria',
     description: 'Krem hangat, tulisan tangan, coretan lucu.',
     swatch: ['#fbf6ec', '#c97b65', '#52181c'],
+    thumb: '/thumbs/ceria.webp',
     reveal: 'zoom',
     order: ['mempelai', 'countdown', 'acara', 'galeri', 'cerita', 'hadiah', 'ucapan'],
   },
@@ -63,6 +67,7 @@ export const TEMPLATES = [
     label: 'Elegan',
     description: 'Editorial sinematik: bingkai arch, cover gelap, animasi halus.',
     swatch: ['#f7f4ef', '#a89a86', '#2b2a27'],
+    thumb: '/thumbs/elegan.webp',
     // Template ini tidak memakai susunan section generik: halamannya dirender
     // oleh components/templates/elegant/ElegantSections.jsx dengan animasi
     // GSAP (lihat lib/useInvitationMotion.js). `order` dipertahankan supaya

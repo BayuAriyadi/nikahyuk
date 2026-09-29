@@ -6,6 +6,7 @@ use App\Http\Requests\StoreGuestRequest;
 use App\Http\Resources\GuestResource;
 use App\Models\Guest;
 use App\Models\Invitation;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -14,6 +15,8 @@ use Illuminate\Validation\ValidationException;
 
 class GuestController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
      * Authenticated: semua tamu dari undangan milik user
      * (dashboard "Daftar Tamu" & "Buku Ucapan", fase 3).
@@ -96,7 +99,7 @@ class GuestController extends Controller
      */
     public function destroy(Request $request, Guest $guest): Response
     {
-        abort_unless($guest->invitation->user_id === $request->user()->id, 403);
+        $this->authorize('delete', $guest);
 
         $guest->delete();
 

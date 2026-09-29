@@ -7,6 +7,8 @@ use App\Http\Requests\UpdateInvitationRequest;
 use App\Http\Resources\InvitationResource;
 use App\Http\Resources\PublicInvitationResource;
 use App\Models\Invitation;
+use App\Support\InvitationDestroyer;
+use App\Support\InvitationEditWindow;
 use App\Support\JsonbPayload;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
@@ -121,9 +123,24 @@ class InvitationController extends Controller
     {
         $this->authorize('update', $invitation);
 
+        // Tolak lebih awal kalau undangan sudah tidak bisa diedit sama sekali
+        // (hari H lewat). Kalau yang dikunci baru sebagian field, penolakan
+        // dilakukan per field di bawah.
+        if (InvitationEditWindow::isLocked($invitation, '*')) {
+            abort(422, 'Undangan tidak bisa diedit lagi karena hari acara sudah lewat.');
+        }
+
         $data = $request->validated();
 
-        $oldPhotos = $this->photoUrls($invitation);
+        // Buang field identitas yang dikunci: diabaikan diam-diam BUKAN pilihan,
+        // karena pemakai akan mengira perubahannya tersimpan padahal tidak.
+        $dicegah = InvitationEditWindow::violatedFields($invitation, $data);
+        if ($dicegah !== []) {
+            abort(422, 'Tidak bisa mengubah: '.implode(', ', $dicegah)
+                .'. Bagian ini dikunci setelah undangan diterbitkan supaya tautan yang sudah dibagikan tidak berubah isinya.');
+        }
+
+        $oldPhotos = app(InvitationDestroyer::class)->photoUrls($invitation);
 
         $invitation->fill(Arr::only($data, ['slug', 'template_name', 'status']));
 
@@ -173,7 +190,7 @@ class InvitationController extends Controller
      */
     private function pruneRemovedPhotos(Invitation $invitation, array $oldPhotos): void
     {
-        $keep = $this->photoUrls($invitation);
+        $keep = app(InvitationDestroyer::class)->photoUrls($invitation);
 
         $prefix = '/storage/gallery/'.$invitation->slug.'/';
 
@@ -215,3 +232,4 @@ class InvitationController extends Controller
         return $slug;
     }
 }
+

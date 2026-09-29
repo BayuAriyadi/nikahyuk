@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\InvitationEditWindow;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -26,6 +27,11 @@ class InvitationResource extends JsonResource
             'last_visited_at' => $this->last_visited_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
+
+            // Dikirim ke dashboard supaya tombol/field yang dikunci memang
+            // tampil terkunci, bukan baru ditolak setelah disimpan.
+            'locked' => InvitationEditWindow::lockedFields($this->resource),
+            'locked_all' => InvitationEditWindow::isLocked($this->resource, '*'),
         ];
     }
 }

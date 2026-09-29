@@ -26,9 +26,28 @@ export function useInvitations() {
     }
   }, [])
 
+  // Muat awal: semua setState di sini berjalan asinkron (di dalam .then), jadi
+  // tidak memicu render ganda saat effect. `reload` tetap dipakai untuk
+  // refresh manual (setelah bayar/edit/hapus, termasuk mode senyap).
   useEffect(() => {
-    reload()
-  }, [reload])
+    let cancelled = false
+
+    invitationsApi
+      .list()
+      .then((payload) => {
+        if (!cancelled) setInvitations(payload?.data ?? [])
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return { invitations, loading, error, reload }
 }

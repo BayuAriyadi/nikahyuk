@@ -1,4 +1,4 @@
-import { REVEAL_CLASSES, useReveal } from '../lib/useReveal.js'
+import { REVEAL_CLASSES, REVEAL_DURATION, useReveal } from '../lib/useReveal.js'
 
 /**
  * Pembungkus animasi "muncul saat discroll" untuk section halaman publik.
@@ -9,12 +9,18 @@ import { REVEAL_CLASSES, useReveal } from '../lib/useReveal.js'
 export default function Reveal({ variant = 'up', delay = 0, children }) {
   const [ref, shown] = useReveal()
   const style = REVEAL_CLASSES[variant] ?? REVEAL_CLASSES.up
+  const duration = REVEAL_DURATION[variant] ?? REVEAL_DURATION.up
+
+  // Durasi dibawa sendiri per varian: varian lambat (veil pakai blur,
+  // bloom/lift jarak tempuh jauh) butuh waktu lebih supaya tidak menyentak.
+  const styles = { transitionDuration: `${duration}ms` }
+  if (delay) styles.transitionDelay = `${delay}ms`
 
   return (
     <div
       ref={ref}
-      style={delay ? { transitionDelay: `${delay}ms` } : undefined}
-      className={`ny-reveal transition duration-700 ease-out ${shown ? style.shown : style.hidden}`}
+      style={styles}
+      className={`ny-reveal transition ease-out ${shown ? style.shown : style.hidden}`}
     >
       {children}
     </div>

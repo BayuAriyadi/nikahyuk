@@ -158,20 +158,28 @@ export default function Guests() {
   const [addOpen, setAddOpen] = useState(false)
   const [deleting, setDeleting] = useState(null)
   const [query, setQuery] = useState('')
+  const [selectedInvitation, setSelectedInvitation] = useState('')
 
   const summary = useMemo(() => {
     const counts = { attending: 0, not_attending: 0, pending: 0 }
-    for (const guest of guests) {
+    const guestsToCount = selectedInvitation
+      ? guests.filter((g) => g.invitation?.id === selectedInvitation)
+      : guests
+    for (const guest of guestsToCount) {
       counts[guest.rsvp_status] = (counts[guest.rsvp_status] ?? 0) + 1
     }
     return counts
-  }, [guests])
+  }, [guests, selectedInvitation])
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    if (!needle) return guests
-    return guests.filter((guest) => guest.name.toLowerCase().includes(needle))
-  }, [guests, query])
+    let result = guests
+    if (selectedInvitation) {
+      result = result.filter((g) => g.invitation?.id === selectedInvitation)
+    }
+    if (!needle) return result
+    return result.filter((guest) => guest.name.toLowerCase().includes(needle))
+  }, [guests, query, selectedInvitation])
 
   async function handleDelete(guest) {
     setDeleting(guest.id)
@@ -222,10 +230,31 @@ export default function Guests() {
       </header>
 
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Total tamu" value={loading ? '…' : guests.length} />
+        <StatCard label="Total tamu" value={loading ? '…' : summary.attending + summary.not_attending + summary.pending} />
         <StatCard label="Hadir" value={loading ? '…' : summary.attending} tone="emerald" />
         <StatCard label="Berhalangan" value={loading ? '…' : summary.not_attending} />
         <StatCard label="Belum konfirmasi" value={loading ? '…' : summary.pending} tone="amber" />
+      </div>
+
+      <div className="mt-4">
+        {invitations.length > 1 && (
+          <label className="block max-w-xs">
+            <span className="sr-only">Filter berdasarkan undangan</span>
+            <select
+              value={selectedInvitation}
+              onChange={(event) => setSelectedInvitation(event.target.value)}
+              className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 outline-none transition focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
+            >
+              <option value="">Semua undangan</option>
+              {invitations.map((invitation) => (
+                <option key={invitation.id} value={invitation.id}>
+                  {invitation.bride_data?.groom?.name ?? 'Tanpa nama'} &amp;{' '}
+                  {invitation.bride_data?.bride?.name ?? 'Tanpa nama'}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
 
       {error && (

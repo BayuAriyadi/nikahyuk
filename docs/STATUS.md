@@ -132,20 +132,161 @@ Detail lengkap tiap fitur ada di `frontend/README.md` (bagian per fitur) dan
   `music_enabled`, `music_title`.
 - `template_name` (kolom): `klasik` | `minimalis` | `floral` | `ceria`. Divalidasi `in:` di
   `Store`/`UpdateInvitationRequest`; katalog tunggal di `frontend/src/lib/invitationPayload.js` (`TEMPLATES`).
-  Nama itu harus sama persis di empat tempat: katalog JS, blok `[data-template=...]` di
-  `frontend/src/templates.css`, rule `in:` backend, dan `$catalog` di
-  `tests/manual/verify_task13.php` (harness itu sengaja memeriksa katalog penuh).
+  - Nama itu harus sama persis di empat tempat: katalog JS, blok `[data-template=...]` di
+    `frontend/src/templates.css`, rule `in:` backend, dan `$catalog` di
+    `tests/manual/verify_task13.php` (harness itu sengaja memeriksa katalog penuh).
+  - Template bukan sekadar ganti palet. Tiga sumbu pembeda, semuanya dari katalog:
+    - `reveal` + `revealBySection`: varian animasi muncul-saat-discroll per section.
+      Varian ada di `REVEAL_CLASSES`/`REVEAL_DURATION` (`lib/useReveal.js`):
+      up, zoom, side, fade, lift, tilt, bloom, veil. Menambah varian = menambah
+      dua entri di file itu, tidak ada komponen baru. **Semua varian wajib
+      berakhir di keadaan tampak** (`opacity-100`) — varian yang mulai dari
+      `opacity-0` bikin elemen hilang permanen saat `prefers-reduced-motion`.
+    - `coupleLayout`: susunan dua kartu mempelai — `split` (klasik), `stack`
+      (minimalis, rata kiri, foto jadi kolom), `circle` (floral, lingkaran
+      besar), `tilted` (ceria, miring seperti tumpukan kertas), `print` (krem,
+      dua kolom + garis vertikal, tanpa "&"). Atributnya menempel di
+      `#mempelai[data-couple-layout]`, ditata di blok "Susunan kartu mempelai".
+    - galeri & kartu acara: tiap template punya `aspect-ratio`, jumlah kolom,
+      celah, radius, dan rotasi sendiri (klasik: polaroid; minimalis: kotak
+      rapat 4px; floral: arch 2 kolom berseling 20px; ceria: sudut goyah miring;
+      krem: kotak tegas). Jangan samakan tanpa alasan.
+  - Animasi berjalan terus (bukan hanya saat discroll) ada di keyframes bersama
+    `templates.css`: `ny-pulse-ring` (cincin tombol "Buka Undangan", class
+    `.ny-cta-pulse`), `ny-breathe` (angka countdown, class `.ny-count-value`),
+    `ny-underline` (garis bawah judul, class `.ny-anim-under`). Semua dimatikan
+    di `@media (prefers-reduced-motion: reduce)`.
+  - Utility Tailwind menang atas selector `[data-template=...]` biasa: `<main>`
+    punya `bg-white` dan `[data-template='krem'] main` kalah cascade. Dua jalan
+    yang terbukti: sebut utility-nya di selector (`main.bg-white`), atau timpa
+    variabelnya (`--color-white`, karena `bg-white` = `var(--color-white)`).
+    Hindari `!important`.
 - `invitations.visit_count` + `last_visited_at`: dihitung di `GET /api/invitations/{slug}`,
   dedupe 30 menit per IP+slug, increment atomic di SQL. Tidak ikut payload publik.
 - JSONB di-whitelist lewat `app/Support/JsonbPayload.php`; field yang dikosongkan dikirim `null`
   supaya terhapus dari JSONB.
 
+## Hardening produksi
+
+Aplikasi berjalan di `APP_ENV=production`, `APP_DEBUG=false`, dan
+`SESSION_SECURE_COOKIE=true`. Sebelum diubah, `APP_DEBUG=true` membuat SETIAP
+error mengembangkan field `file`, `exception`, dan `trace` ke publik — lengkap
+dengan path absolut `/opt/data/projects/nikahyuk/vendor/...`. Itu peta gratis
+tentang struktur server bagi siapa saja. Verifikasi: `verify_hardening.php`.
+
+Dua hal yang wajib diingat soal mode produksi:
+- **`.env` dibaca sekali lalu di-cache.** Mengubahnya tidak berlaku sebelum
+  `php artisan config:clear`. Kalau perubahan konfigurasi tidak terasa, ini
+  hampir selalu penyebabnya.
+- **Token Sanctum di localStorage harus string polos**, bukan JSON. Menulis
+  `JSON.stringify(token)` membuat `getToken()` mengirim Bearer `"re_..."`
+  lengkap dengan tanda kutip, dan dashboard melempar kamu ke `/login` tanpa
+  pesan error. Gejalanya mirip "auto-logout".
+
+## Jebakan Vite preview: dist kedaluarsa
+
+Pernah terjadi: `vite preview` terus menyajikan `dist` yang sudah dihapus
+(setelah rebuild). Gejalanya **HALAMAN UNDANGAN PUBLIK TAMPIL KOSONG TOTAL** —
+`#root` nol anak, tanpa satu pun error di konsol biasa, sementara:
+- `GET /` tetap **200** (index.html lama masih dilayani)
+- `GET /api/invitations/{slug}` tetap **200** dengan data lengkap
+- halaman dashboard/landing tetap normal
+
+Yang gagal cuma lazy import modul: browser melempar
+`TypeError: Failed to fetch dynamically imported module: /assets/<chunk>.js`.
+Cara melihatnya: pasang listener `error` **sebelum** pindah halaman, lalu
+navigasi lewat `history.pushState` + `PopStateEvent` (reload penuh menghapus
+listenernya). Port 4173 proxy aman; masalahnya murni preview memegang dist lama.
+
+Penangkalnya ada di `server-health.sh`: skrip mengambil slug undangan published
+(melalui `scripts/helpers/pick_published_slug.php`, karena `/api/invitations`
+butuh token), mengekstrak nama chunk dari index.html yang dilayani, dan
+memeriksa chunk itu benar-benar 200. Kode 200 di `/` saja terbukti tidak cukup.
+
+Kalau ini terjadi lagi: restart `vite preview`, jangan cuma rebuild.
+
+Catatan samping: helper di `scripts/helpers/` butuh path `../../projects/...`
+(dari `/opt/data/scripts/helpers/` naik dua tingkat ke `/opt/data`), bukan
+`../../../` yang berujung di `/`.
+
+## Cadangan & pemulihan
+
+`scripts/backup-nikahyuk.sh` berjalan tiap 03:00 (cron `1b8333f7f462`) dan
+mencadangkan dua hal: `pg_dump` database, dan `storage/app/public` berisi foto
+galeri + musik — berkas itu TIDAK ikut di dalam dump database, jadi kalau cuma
+database yang dicadangkan, semua unggahan pengguna hilang. Retensi 7 hari.
+
+Sandi database tidak ditulis di skrip maupun di environment proses (mudah
+terlihat lewat `ps`); dipakai `~/.pgpass` berizin 600.
+
+**Yang perlu kamu tahu soal pemulihan:** user aplikasi `nikahyuk` TIDAK punya
+hak `CREATEDB` (hanya `postgres` yang superuser). Pembatasan ini membuat
+pemulihan ke database baru tidak bisa dilakukan dari dalam aplikasi — harus
+lewat superuser. `scripts/restore-nikahyuk.sh` disiapkan untuk itu: ia
+memulihkan dulu ke database SEMENTARA, memverifikasi isinya tidak kosong, baru
+menukar nama setelah kamu mengetik `YA`. Database lama tidak disentuh sebelum
+verifikasi lolos.
+
+Catatan tujuan cadangan: direktori default `/opt/data/backup` berada di volume
+yang SAMA dengan sistem. Kalau volume itu rusak, cadangannya ikut rusak. Setelah
+ada mount volume Proxmox terpisah, cukup set `NIKAHYUK_BACKUP_ROOT` ke sana —
+skripnya membaca variabel itu dan tidak perlu diubah.
+
+Catatan lingkungan: **cron Hermes bukan crond sistem**. `crontab -l` akan kosong
+dan `pgrep cron` tidak menemukan apa-apa walau penjadwalan jalan; penjadwalannya
+hidup di gateway Hermes. Jangan menyimpulkan "watchdog tidak pernah jalan" hanya
+dari `crontab -l` yang kosong.
+
+Alamat publik utama sekarang **https://nikahyuk.pujin.my.id** (tunnel Cloudflare
+bernama `nikahyuk`, id `456e1338-…`, konfigurasi di
+`/opt/data/home/.cloudflared/config.yml`). Tailscale funnel dan quick tunnel
+masih hidup sebagai cadangan. Watchdog di `/opt/data/scripts/tailscale-watchdog.sh`
+mengecek named tunnel lewat **HTTP dari internet**, bukan sekadar proses hidup:
+proses hidup tapi domain 530 tetap memicu restart.
+
+Saat menguji endpoint dari luar (Tailscale funnel atau Cloudflare), dua jebakan
+ini bikin hasil tes palsu:
+- **`GET /` dengan header `Accept: application/json` menjawab 404** dari Vite
+  preview — halaman HTML cuma dikasih kalau klien minta `text/html`. Kalau tes
+  otomatis dapat 404 di path root, itu salah tes, bukan salah aplikasi.
+- Santum auth lewat proxy aman, tapi JWT Authorization **harus diuji dengan
+  token dari DB berformat `plainTextToken`**, bukan kolom `token` (sudah
+  ter-hash) — pakai token yang salah dapat 401 dan gampang disangka proxy
+  membuang header.
+
 ## Yang sudah selesai
 
 Fase 1-4 PRD selesai, plus: hapus undangan, Cerita Kita (love story), statistik kunjungan,
-multi-template penuh (klasik / minimalis / floral / ceria dengan layout + animasi berbeda), **galeri
+multi-template penuh (klasik / minimalis / floral / ceria / krem dengan layout + animasi berbeda), **statistik
+kunjungan** (`pages/Statistics.jsx`, route `/dashboard/statistik`, entri
+"Statistik" di sidebar), **galeri
 template di landing page**, dan **wizard 5 langkah "Buat Undangan Baru"** (pilih template →
 data mempelai → detail acara → foto & cerita → pratinjau & terbit/bayar).
+
+Halaman statistik (`/dashboard/statistik`) tidak punya endpoint sendiri: semua
+angka dihitung di klien dari `useInvitations()` + `useGuests()` yang sudah
+dimuat dashboard lain. Menambah metrik = menambah hitungan di `Statistics.jsx`,
+tidak perlu menyentuh backend. Dua aturan yang dipakai di sana:
+- **Sorting butuh tie-break.** Beberapa undangan bisa punya `visit_count` sama;
+  sort tanpa pengikat kedua membuat urutan tabel berubah-ubah antar render.
+  Pengikatnya `slug` (unik), sama seperti jebakan `created_at` identik di
+  harness.
+- **`Route [login] not defined`: aplikasi ini API-only**, tidak punya route web
+  `login`. Middleware `auth:sanctum` bawaan mengalihkan tamu ke route itu,
+  gagal melempar `RouteNotFoundException`, dan SEMUA endpoint terproteksi
+  menjawab **500, bukan 401**. Perbaikannya satu baris di `bootstrap/app.php`:
+  `$middleware->redirectGuestsTo('/')`. Tanpa itu klien tidak bisa membedakan
+  "belum login" dari "server rusak". Gejala yang muncul di log:
+  `Symfony\...\RouteNotFoundException: Route [login] not defined`.
+- **`storage/logs/laravel.log` bisa berpindah milik ke root** setelah menjalankan
+  perintah composer/artisan sebagai root (mis. `composer require`). Laravel
+  lalu gagal menulis log, dan setiap error menjelma "500 tanpa jejak" —
+  padahal 500 itu hanyalah efek dari kegagalan mencatat error. Cek kepemilikan
+  file dulu sebelum men-debug error 500 yang tidak berjejak.
+
+- **Tabel lebar wajib `overflow-x-auto` di pembungkus dalam**, dengan
+  `overflow-hidden` di pembungkus luar untuk memotong radius. Tanpa itu tabel
+  memaksa halaman melebar di 390px (dan tes overflow horizontal gagal).
 
 Detail dua yang terakhir ada di `frontend/README.md` bagian "Landing page", "Alur Buat
 Undangan Baru", dan "Pratinjau undangan". Singkatnya:
@@ -173,17 +314,44 @@ Undangan Baru", dan "Pratinjau undangan". Singkatnya:
 
 ## Yang belum
 
-1. **Mailer masih `log`** — tautan reset password hanya muncul di `storage/logs/laravel.log`.
-   Untuk produksi: `MAIL_MAILER=smtp` + kredensial SMTP. Butuh keputusan/kredensial user.
-   Terkait: `FRONTEND_URL` di `.env` masih `http://100.66.135.80:5173` (node Tailscale lama
-   yang sudah offline) — ganti ke URL funnel/domain final supaya tautan reset tidak mati.
+Endpoint backend `PUT /api/invitations/{invitation}` **sudah ada** dan dipakai
+wizard buat-undangan-baru (nama diisi di langkah 2, jadi langkah berikutnya
+PATCH, bukan POST kedua).
+
+1. ~~Mailer masih `log`~~ SELESAI — memakai Resend dengan pengirim
+   `nikahyuk@pujin.my.id` (domain terverifikasi).
 2. **Pembayaran masih driver `fake`** — `PAYMENT_DRIVER=fake` (simulasi lokal lewat
    `php artisan payments:simulate <order_id>`). Midtrans sandbox key sudah terisi di `.env`,
    tapi driver belum dipindah dan `MIDTRANS_WEBHOOK_SECRET` masih kosong. Untuk live: ganti
    driver + isi kredensial produksi + set webhook URL ke domain publik.
-3. **Deploy produksi belum** — belum ada host/domain final. Opsional: subdomain
-   `undangan.pujin.my.id` lewat Cloudflare Tunnel bernama (butuh 1 klik login Cloudflare dari user).
-4. **URL akses** masih nama node Tailscale (`7e07bbd09d70.tail099f48.ts.net`), belum domain cantik.
+3. ~~Deploy produksi belum~~ SELESAI — https://nikahyuk.pujin.my.id lewat
+   tunnel Cloudflare bernama `nikahyuk` (config di
+   `/opt/data/home/.cloudflared/config.yml`), dijaga watchdog.
+4. ~~URL akses masih node Tailscale~~ SELESAI — `FRONTEND_URL` sudah domain sendiri.
+
+Catatan yang pernah salah berulang kali:
+- "edit undangan belum ada" (padahal sudah lengkap),
+- "template `elegan` belum ikut sistem layout" (padahal komposisinya memang
+  disengaja berdiri sendiri).
+Sebelum menyatakan sebuah fitur belum ada atau rusak, buka dulu di browser dan
+bacalah komponennya — STATUS.md ini ikut kedaluwarsa dan tidak boleh dipercaya
+mentah-mentah.
+
+**Harness `verify_task2.php` MENINGGALKAN data uji.** Ia membuat
+`owner-a@uji.test` / `owner-b@uji.test` (dan undangan `andi-sari*`) tanpa
+membersihkannya di akhir. Jadi setiap kali harness ini dijalankan, jumlah user
+dan undangan bertambah. Kalau tiba-tiba ada `owner-@uji.test` atau `andi-sari*`
+di DB, itu sampah dari tes, BUKAN serangan dan bukan pengguna baru. Bersihkan
+dengan menghapus user bersangkutan berikut undangannya. Itu KELIRU — fiturnya sudah
+lengkap: `InvitationEditModal.jsx` (~983 baris) memanggil `invitationsApi.update()`
+→ `PUT /api/invitations/{id}`, lengkap dengan validasi sisi klien
+(`validateEditForm`) dan pemetaan error server (`mapServerErrors`). Sebelum
+menyatakan sebuah fitur belum ada, greplah komponennya — jangan mengandalkan
+ingatan.
+
+Yang masih terbuka di sisi produk:
+- ~~Template `elegan` belum mengikuti sistem layout baru~~ SELESAI — `coupleLayout` dan `revealBySection` sudah dipetakan di `invitationPayload.js`, `PublicInvitation.jsx`, dan `InvitationPreview.jsx`.
+- **Dark mode belum ada** — ditunda sesuai permintaan.
 
 ## Verifikasi
 

@@ -187,6 +187,15 @@
   transform: rotate(1.2deg);
 }
 
+/* Kartu acara: kertas ditempel miring di papan, sudut goyah bergantian. */
+[data-template='ceria'] #acara .ny-card:first-of-type {
+  transform: rotate(-1.4deg);
+}
+
+[data-template='ceria'] #acara .ny-card:last-of-type {
+  transform: rotate(1.2deg);
+}
+
 /* Cerita: garis putus-putus + titik tinta. */
 [data-template='ceria'] .ny-story li {
   border-left-style: dashed;
@@ -347,7 +356,136 @@
   display: none;
 }
 
+/* ===== Keyframes bersama (ornamen hidup, bukan hanya saat discroll) =====
+ * Semua loop dihentikan saat prefers-reduced-motion: transisi jadi nol dan
+ * elemen langsung di keadaan akhir, jadi tidak ada gerakan tersisa. */
+
+@keyframes ny-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -14px, 0) scale(1.04);
+  }
+}
+
+@keyframes ny-pulse-ring {
+  0% {
+    transform: scale(0.94);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.06);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.06);
+    opacity: 0;
+  }
+}
+
+@keyframes ny-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.62;
+  }
+}
+
+@keyframes ny-underline {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ny-anim-drift,
+  .ny-anim-breathe {
+    animation: none;
+  }
+
+  /* Elemen yang dianimasikan lewat keyframes wajib berakhir di keadaan
+     tampak, bukan di keadaan awal animasi. */
+  .ny-anim-under {
+    transform: none;
+  }
+}
+
+/* Tombol "Buka Undangan": cincin denyut mengembang dari belakangnya,
+   penanda bahwa halaman bisa digulir. */
+.ny-cta-pulse {
+  position: relative;
+}
+
+.ny-cta-pulse::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  border: 1px solid currentColor;
+  opacity: 0;
+  animation: ny-pulse-ring 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+/* Angka countdown: napas halus supaya panel tidak terasa mati. */
+.ny-countdown .ny-count-value {
+  animation: ny-breathe 3.2s ease-in-out infinite;
+}
+
+/* Garis bawah judul menggaris masuk saat pertama kali terlihat. */
+.ny-anim-under::after {
+  content: '';
+  display: block;
+  height: 1px;
+  margin-top: 0.75rem;
+  background-color: currentColor;
+  transform-origin: left center;
+  animation: ny-underline 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ny-countdown .ny-count-value,
+  .ny-cta-pulse::after,
+  .ny-anim-under::after {
+    animation: none;
+  }
+}
+
 /* ===== Klasik: kartu terangkat saat disentuh ===== */
+
+/* Galeri klasik: bingkai polaroid putih tebal, caption-less, agak melayang
+   saat disentuh. Identitas visual utama template ini selain warna rose. */
+[data-template='klasik'] .ny-gallery button {
+  border-radius: 0.5rem;
+  border-width: 0.5rem 0.5rem 1.25rem;
+  border-color: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.14);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+@media (hover: hover) {
+  [data-template='klasik'] .ny-gallery button:hover {
+    transform: rotate(-1deg) scale(1.02);
+    box-shadow: 0 6px 14px rgb(0 0 0 / 0.18);
+  }
+}
+
+[data-template='klasik'] .ny-gallery img {
+  aspect-ratio: 4 / 5;
+}
+
+/* Kartu acara klasik: bingkai ganda (kartu undangan berlapis). */
+[data-template='klasik'] #acara .ny-card {
+  border-width: 1px;
+  box-shadow: inset 0 0 0 1px var(--color-rose-50);
+}
 
 [data-template='klasik'] .ny-card {
   transition:
@@ -440,6 +578,24 @@
   border-radius: 0;
 }
 
+/* Galeri minimalis: 3 kolom kotak rapi, tanpa lengkung, celah tipis. */
+[data-template='minimalis'] .ny-gallery {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+[data-template='minimalis'] .ny-gallery img {
+  aspect-ratio: 1 / 1;
+}
+
+/* Kartu acara jadi baris datar berbingkai bawah, bukan kotak tertutup. */
+[data-template='minimalis'] #acara .ny-card {
+  border-width: 0 0 1px;
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 /* Glow lembut mengikuti kursor (hanya desktop berpointer presisi). */
 @media (hover: hover) and (pointer: fine) {
   [data-template='minimalis'] .ny-cover::after {
@@ -517,8 +673,257 @@
   border-color: var(--color-rose-300);
 }
 
+/* Galeri floral: dua kolom berseling tinggi menyerupai jendela taman, semua
+ * berbentuk lengkungan seperti foto mempelainya. */
+[data-template='floral'] .ny-gallery {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: start;
+}
+
+[data-template='floral'] .ny-gallery img {
+  aspect-ratio: 3 / 4;
+}
+
+[data-template='floral'] .ny-gallery li:nth-child(odd) {
+  transform: translateY(1.25rem);
+}
+
+[data-template='floral'] .ny-gallery button {
+  border-radius: 999px 999px 1rem 1rem;
+}
+
+/* Kartu acara floral diletakkan bersebelahan melengkung, tanpa kotak kaku. */
+[data-template='floral'] #acara .ny-card {
+  border-radius: 2rem 2rem 2rem 0.5rem;
+}
+
 [data-template='minimalis'] .ny-gallery button {
   border-radius: 0;
+}
+
+/* ===== Krem: krem gading, serif ramping (Cormorant), garis tipis =====
+ * Palet hangat netral: kertas gading, emas pudar, tinta cokelat tua.
+ * rose-50..900 dipetakan ke ramp krem supaya semua utility Tailwind yang
+ * sudah dipakai komponen ikut berganti tanpa menyentuh markup React.
+ * Semua nilai lolos kontras WCAG AA di atas latar krem #f8f5f0:
+ * 300 = 1,85:1 (hanya grafik besar), 500 = 3,42:1 (garis/ikon, >= 3:1),
+ * 600 = 4,67:1 (teks kecil), 700+ jauh di atas ambang. */
+[data-template='krem'] {
+  --color-rose-50: oklch(97.2% 0.008 85);
+  --color-rose-100: oklch(95.5% 0.016 85);
+  --color-rose-200: oklch(91.2% 0.032 82);
+  --color-rose-300: oklch(78% 0.062 74);
+  --color-rose-400: oklch(70% 0.078 68);
+  --color-rose-500: oklch(62% 0.088 62);
+  --color-rose-600: oklch(54.5% 0.09 57);
+  --color-rose-700: oklch(46.5% 0.082 53);
+  --color-rose-800: oklch(38% 0.07 48);
+  --color-rose-900: oklch(30% 0.058 44);
+
+  --krem-paper: oklch(97.2% 0.008 85);
+  --krem-ink: oklch(28% 0.02 60);
+  --krem-font-display: 'Cormorant Garamond', Georgia, serif;
+  --krem-font-sans: 'Jost', 'Plus Jakarta Sans', ui-sans-serif, sans-serif;
+  --krem-rule: oklch(78% 0.062 74);
+  --krem-hair: 1px;
+
+  /* <main> memakai utility `bg-white`, yang di Tailwind 4 diterjemahkan jadi
+   * `background-color: var(--color-white)`. Menimpa variabelnya mengubah latar
+   * halaman tanpa perlu menang perang cascade melawan utility. */
+  --color-white: var(--krem-paper);
+}
+
+/* Judul: serif ramping, kapital, spasi lebar seperti kartu undangan cetak. */
+[data-template='krem'] .ny-title h2 {
+  font-family: var(--krem-font-display);
+  font-weight: 400;
+  font-size: clamp(1.6rem, 5.2vw, 2.15rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-rose-800);
+}
+
+/* Kicker kecil di atas judul. */
+[data-template='krem'] .ny-title p {
+  font-family: var(--krem-font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-rose-600);
+}
+
+/* Garis pemisah: satu garis rambut dengan berlian di tengah. */
+[data-template='krem'] .ny-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+[data-template='krem'] .ny-divider::before,
+[data-template='krem'] .ny-divider::after {
+  content: '';
+  height: var(--krem-hair);
+  width: 3.5rem;
+  background-color: var(--krem-rule);
+}
+
+[data-template='krem'] .ny-divider::after {
+  content: '';
+  width: 0.4rem;
+  height: 0.4rem;
+  background-color: var(--color-rose-500);
+  transform: rotate(45deg);
+  flex: none;
+}
+
+/* Kartu: kertas gading, sudut tegas (bukan membulat), tanpa bayangan. */
+[data-template='krem'] .ny-card {
+  border-radius: 0;
+  border-color: var(--color-rose-200);
+  background-color: var(--krem-paper);
+  box-shadow: none;
+}
+
+/* Latar halaman: kertas gading polos. Utility `bg-white` ada di <main>, jadi
+ * selector ikut menyebutnya — tanpa itu utility menang cascade. Cara yang sama
+ * dipakai ceria untuk `.ny-cover` yang juga punya utility `bg-gradient`. */
+[data-template='krem'] main.bg-white,
+[data-template='krem'] .ny-cover {
+  background-image: none;
+  background-color: var(--krem-paper);
+}
+
+/* Cover: tanpa scrim gelap; foto (kalau ada) diredam tipis saja supaya
+ * teks tinta cokelat tetap terbaca. */
+[data-template='krem'] .ny-scrim {
+  background-color: oklch(30% 0.02 60 / 0.28);
+}
+
+[data-template='krem'] .ny-frame {
+  border-radius: 0;
+  border-color: var(--color-rose-400);
+  opacity: 0.85;
+}
+
+[data-template='krem'] .ny-cover-inner h1 {
+  font-family: var(--krem-font-display);
+  font-weight: 300;
+  font-size: clamp(2.4rem, 11vw, 4rem);
+  letter-spacing: 0.02em;
+  line-height: 1.08;
+  color: var(--krem-paper);
+}
+
+[data-template='krem'] .ny-cover-inner > p:first-child {
+  font-family: var(--krem-font-sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--color-rose-100);
+}
+
+/* Hitung mundur: panel tinta solid, angka serif. */
+[data-template='krem'] .ny-countdown {
+  border-radius: 0;
+  background-image: none;
+  background-color: var(--color-rose-800);
+  box-shadow: none;
+}
+
+/* Galeri: kotak tegas, tanpa lengkung. */
+[data-template='krem'] .ny-gallery button,
+[data-template='krem'] .ny-gallery img {
+  border-radius: 0;
+}
+
+/* Cerita: garis waktu vertikal rambut dengan simpul berlian. */
+[data-template='krem'] .ny-story > li {
+  border-left: var(--krem-hair) solid var(--krem-rule);
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+[data-template='krem'] .ny-story > li::before {
+  content: '';
+  position: absolute;
+  left: -0.28rem;
+  top: 0.5rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: var(--color-rose-500);
+  transform: rotate(45deg);
+}
+
+/* ===== Susunan kartu mempelai per template =====
+ * Katalog memilih lewat `coupleLayout`; atributnya menempel di section
+ * (#mempelai) sehingga CSS bisa menata tanpa komponen React baru. */
+
+/* Minimalis: bertumpuk penuh lebar, rata kiri, foto jadi kolom kiri. */
+[data-couple-layout='stack'] .ny-card {
+  text-align: left;
+}
+
+[data-couple-layout='stack'] .ny-couple-amp {
+  display: none;
+}
+
+/* Floral: dua lingkaran besar berhimpitan seperti karangan bunga; kartu
+ * bulat penuh. Nama diletakkan di bawah lingkaran dengan latar tembus
+ * pandang supaya foto tidak tertutup. */
+[data-couple-layout='circle'] .ny-card {
+  box-shadow: none;
+  background-color: transparent;
+  border-color: transparent;
+}
+
+[data-couple-layout='circle'] .ny-card-photo {
+  box-shadow: none;
+  --tw-ring-shadow: none;
+}
+
+[data-couple-layout='circle'] .ny-couple-amp {
+  margin: -0.5rem 0;
+}
+
+/* Ceria: kartu miring bergantian seperti tumpukan kertas di meja. */
+[data-couple-layout='tilted'] .ny-card:first-of-type {
+  transform: rotate(-2deg);
+}
+
+[data-couple-layout='tilted'] .ny-card:last-of-type {
+  transform: rotate(1.6deg);
+}
+
+[data-couple-layout='tilted'] .ny-couple-amp {
+  transform: rotate(-6deg);
+}
+
+/* Krem: dua kolom dipisah garis vertikal rambut di tengah (tanpa "&").
+ * Garisnya digambar di celah grid (pembungkus kartu), bukan di kartu itu
+ * sendiri — kalau menempel di kartu, padding kartu membuat garisnya
+ * menabrak teks di kolom kanan. */
+[data-couple-layout='print'] .ny-card {
+  border-top-width: 1px;
+}
+
+@media (min-width: 640px) {
+  [data-couple-layout='print'] .ny-card ~ .ny-card {
+    position: relative;
+  }
+
+  [data-couple-layout='print'] .ny-card ~ .ny-card::before {
+    content: '';
+    position: absolute;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    /* Setengah dari gap grid (1.5rem) ditambah setengah lebar garis. */
+    left: -1.5rem;
+    border-left: 1px solid oklch(78% 0.062 74);
+  }
 }
 
 /* ===== Pratinjau (wizard & galeri template) =====

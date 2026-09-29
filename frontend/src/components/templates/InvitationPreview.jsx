@@ -7,8 +7,9 @@ import {
   GallerySection,
   GiftSection,
   StorySection,
-  eventMainMoment,
 } from '../../pages/PublicInvitation.jsx'
+import { eventMainMoment } from '../../lib/invitationTime.js'
+import { SAMPLE_PREVIEW } from '../../lib/samplePreview.js'
 import { ElegantInvitation } from './elegant/ElegantSections.jsx'
 import { DEFAULT_TEMPLATE_NAME, templateByName } from '../../lib/invitationPayload.js'
 import { useInvitationMotion } from '../../lib/useInvitationMotion.js'
@@ -26,72 +27,9 @@ const DATE_FMT = new Intl.DateTimeFormat('id-ID', {
  * (langkah pratinjau) dan galeri template di landing page.
  *
  * `data` memakai bentuk yang sama dengan API: { bride_data, event_data,
- * template_config, template_name }. Kalau kosong, dipakai contoh fiktif.
+ * template_config, template_name }. Kalau kosong, dipakai contoh fiktif
+ * (src/lib/samplePreview.js).
  */
-export const SAMPLE_PREVIEW = {
-  template_name: DEFAULT_TEMPLATE_NAME,
-  bride_data: {
-    groom: {
-      name: 'Andi Pratama',
-      nick: 'Andi',
-      father: 'Bapak Pratama',
-      mother: 'Ibu Lestari',
-      instagram: 'andipratama',
-    },
-    bride: {
-      name: 'Sari Dewi',
-      nick: 'Sari',
-      father: 'Bapak Dewanto',
-      mother: 'Ibu Ratna',
-      instagram: 'saridewi',
-    },
-    story: [
-      {
-        title: 'Pertama Bertemu',
-        date: 'Maret 2019',
-        text: 'Kami dipertemukan di sebuah acara kampus, berawal dari obrolan ringan soal tugas kuliah.',
-      },
-      {
-        title: 'Mulai Menjalin',
-        date: 'Agustus 2020',
-        text: 'Setelah setahun saling mengenal, kami memutuskan untuk menjalani hubungan ini bersama.',
-      },
-    ],
-  },
-  event_data: {
-    akad: {
-      date: '2026-12-10',
-      time: '08:00',
-      venue: 'Masjid Al-Hikmah',
-      address: 'Jl. Melati No. 10, Bandung',
-    },
-    resepsi: {
-      date: '2026-12-10',
-      time: '11:00',
-      venue: 'Gedung Graha Indah',
-      address: 'Jl. Anggrek No. 5, Bandung',
-    },
-  },
-  template_config: {
-    // Foto contoh dari public/samples/ (domain publik / CC dari Wikimedia
-    // Commons, lihat docs/STATUS.md) supaya pratinjau tiap template tampil
-    // dengan foto nyata, bukan kotak kosong.
-    cover_photo: '/samples/a5-dress-back.jpg',
-    gallery: [
-      '/samples/a1-bouquet-roses.jpg',
-      '/samples/a3-bouquet-calla.jpg',
-      '/samples/a9-table.jpg',
-      '/samples/a7-rings.jpg',
-      '/samples/a2-bouquet-white.jpg',
-      '/samples/a6-dress-valentino.jpg',
-    ],
-    gift: {
-      enabled: true,
-      accounts: [{ bank: 'BCA', number: '1234567890', name: 'Andi Pratama' }],
-    },
-  },
-}
-
 export default function InvitationPreview({ data, className = '' }) {
   const source = data ?? SAMPLE_PREVIEW
   const template = templateByName(source?.template_name || DEFAULT_TEMPLATE_NAME)
@@ -126,6 +64,7 @@ export default function InvitationPreview({ data, className = '' }) {
           gift={source?.template_config?.gift}
           coverPhoto={coverPhoto}
           mainMoment={mainMoment}
+          coupleLayout={template.coupleLayout}
         />
 
         <footer className="px-5 pb-10">

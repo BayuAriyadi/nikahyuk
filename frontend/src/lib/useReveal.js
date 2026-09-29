@@ -4,10 +4,15 @@ import { useEffect, useRef, useState } from 'react'
  * Reveal saat masuk viewport (animasi interaktif yang menghormati
  * prefers-reduced-motion). Dipakai lintas template dengan `variant`:
  *
- *   up    - naik + memudar (default, dipakai template klasik)
- *   zoom  - membesar halus (minimalis)
- *   side  - meluncur dari kiri/kanan bergantian (floral)
- *   none  - tanpa animasi (kalau animasi dimatikan user)
+ *   up     - naik + memudar (klasik)
+ *   zoom   - membesar halus (minimalis)
+ *   side   - meluncur dari samping (floral)
+ *   fade   - memudar tanpa gerak (krem; tenang, cocok tipografi cetak)
+ *   lift   - naik lebih jauh + memudar pelan (ceria)
+ *   tilt   - miring sedikit lalu lurus, seperti kartu dibalik (galeri)
+ *   bloom  - mengembang dari kecil + memudar, agak memantul (floral)
+ *   veil   - kabur (blur) lalu tajam (elegan/krem)
+ *   none   - tanpa animasi (kalau animasi dimatikan user)
  *
  * Return [ref, shown]; pasang ref di elemen yang ingin dianimasikan.
  */
@@ -69,6 +74,44 @@ export const REVEAL_CLASSES = {
     hidden: '',
     shown: '',
   },
+  // Varian tambahan: tiap template punya rasa gerak sendiri, bukan cuma
+  // ganti warna. `blur` butuh `filter`, jadi transisinya dipanjangkan.
+  fade: {
+    hidden: 'opacity-0',
+    shown: 'opacity-100',
+  },
+  lift: {
+    hidden: 'translate-y-12 opacity-0',
+    shown: 'translate-y-0 opacity-100',
+  },
+  tilt: {
+    hidden: 'rotate-[-2.5deg] scale-[0.96] opacity-0',
+    shown: 'rotate-0 scale-100 opacity-100',
+  },
+  bloom: {
+    hidden: 'scale-[0.82] opacity-0',
+    shown: 'scale-100 opacity-100',
+  },
+  veil: {
+    hidden: 'blur-[10px] opacity-0',
+    shown: 'blur-0 opacity-100',
+  },
+}
+
+/**
+ * Durasi transisi per varian (ms). Varian lambat (veil pakai blur, bloom/lift
+ * jarak tempuh jauh) perlu waktu lebih supaya tidak terasa menyentak.
+ */
+export const REVEAL_DURATION = {
+  veil: 900,
+  bloom: 800,
+  lift: 800,
+  tilt: 700,
+  zoom: 700,
+  up: 700,
+  side: 700,
+  fade: 1000,
+  none: 0,
 }
 
 /**

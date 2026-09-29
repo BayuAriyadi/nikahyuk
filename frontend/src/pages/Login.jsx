@@ -16,7 +16,7 @@ export default function Login() {
 
   // Pesan dari halaman Pengaturan: password baru saja diganti, semua sesi dicabut.
   // Flag dibaca sekali lalu dihapus supaya tidak muncul lagi setelah refresh.
-  const [passwordChanged, setPasswordChanged] = useState(
+  const [passwordChanged] = useState(
     () => sessionStorage.getItem('nikahyuk.passwordChanged') === '1',
   )
 

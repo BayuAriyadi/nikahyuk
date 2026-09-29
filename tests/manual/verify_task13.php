@@ -82,7 +82,7 @@ $tokenOther = $other->createToken('verify-t13-other')->plainTextToken;
 //   - TEMPLATES di frontend/src/lib/invitationPayload.js
 //   - blok [data-template=...] di frontend/src/templates.css
 //   - rule in: di Store/UpdateInvitationRequest.php
-$catalog = ['klasik', 'minimalis', 'floral', 'ceria', 'elegan'];
+$catalog = ['klasik', 'minimalis', 'floral', 'ceria', 'krem', 'elegan'];
 
 echo "== T1: seluruh katalog diterima saat create ==\n";
 $slugs = [];

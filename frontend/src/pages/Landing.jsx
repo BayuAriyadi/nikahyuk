@@ -1,9 +1,13 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import TemplatePreviewModal from '../components/templates/TemplatePreviewModal.jsx'
-import { TemplateThumb } from '../components/templates/TemplateCard.jsx'
+import { TemplatePhoto } from '../components/templates/TemplateCard.jsx'
 import { TEMPLATES } from '../lib/invitationPayload.js'
+
+// Pratinjau template (yang memuat seluruh halaman tamu) dimuat saat tamu
+// menekan "Lihat contoh", bukan saat landing page dibuka — bundle awal tetap
+// ringan dan halaman undangan publik tidak ikut ke chunk utama.
+const TemplatePreviewModal = lazy(() => import('../components/templates/TemplatePreviewModal.jsx'))
 
 /**
  * Landing page publik (route "/").
@@ -602,7 +606,7 @@ function TemplateGallery({ onPreview }) {
         </div>
 
         <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {TEMPLATES.map((template) => (
+          {TEMPLATES.slice(0, 3).map((template) => (
             <li key={template.name} className="group">
               <button
                 type="button"
@@ -610,7 +614,7 @@ function TemplateGallery({ onPreview }) {
                 aria-label={`Lihat contoh template ${template.label}`}
                 className="block w-full overflow-hidden rounded-2xl border border-rose-100 bg-white p-2.5 text-left shadow-sm transition hover:-translate-y-1 hover:border-rose-200 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
               >
-                <TemplateThumb
+                <TemplatePhoto
                   template={template}
                   className="aspect-[4/5] w-full rounded-xl ring-1 ring-rose-100/80"
                 />
@@ -629,6 +633,14 @@ function TemplateGallery({ onPreview }) {
           Semua desain memakai fitur yang sama: RSVP, buku ucapan, galeri foto, cerita, dan kirim
           hadiah.
         </p>
+
+        <Link
+          to="/template"
+          className="mt-6 inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-white px-5 py-2.5 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+        >
+          Lihat semua {TEMPLATES.length} desain
+          <span aria-hidden="true">&rarr;</span>
+        </Link>
       </div>
     </section>
   )
@@ -655,17 +667,29 @@ export default function Landing() {
       <Footer ctaTo={ctaTo} user={user} />
 
       {previewTemplate && (
-        <TemplatePreviewModal
-          templateName={previewTemplate}
-          onClose={() => setPreviewTemplate(null)}
-          onUse={() => {
-            setPreviewTemplate(null)
-            // Template dipilih di langkah pertama wizard; di sini cukup
-            // diantar ke halaman yang punya tombolnya (register kalau belum
-            // punya akun, daftar undangan kalau sudah).
-            navigate(ctaTo)
-          }}
-        />
+        <Suspense
+          fallback={
+            <div
+              role="dialog"
+              aria-label="Memuat pratinjau"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 text-sm text-white"
+            >
+              Memuat pratinjau…
+            </div>
+          }
+        >
+          <TemplatePreviewModal
+            templateName={previewTemplate}
+            onClose={() => setPreviewTemplate(null)}
+            onUse={() => {
+              setPreviewTemplate(null)
+              // Template dipilih di langkah pertama wizard; di sini cukup
+              // diantar ke halaman yang punya tombolnya (register kalau belum
+              // punya akun, daftar undangan kalau sudah).
+              navigate(ctaTo)
+            }}
+          />
+        </Suspense>
       )}
     </div>
   )

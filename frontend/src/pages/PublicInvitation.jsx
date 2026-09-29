@@ -7,10 +7,12 @@ import Reveal from '../components/Reveal.jsx'
 import Lightbox from '../components/Lightbox.jsx'
 import { copyText } from '../lib/clipboard.js'
 import { timeAgo } from '../lib/time.js'
+import { eventMainMoment, parseEventMoment } from '../lib/invitationTime.js'
 import { DEFAULT_TEMPLATE_NAME, templateByName } from '../lib/invitationPayload.js'
 import { usePointerGlow } from '../lib/useReveal.js'
 import { useInvitationMotion } from '../lib/useInvitationMotion.js'
 import { ElegantInvitation } from '../components/templates/elegant/ElegantSections.jsx'
+import StatusBadge from '../components/guests/StatusBadge.jsx'
 
 /*
  * Halaman undangan publik (route /:slug): muka produk yang dibuka tamu.
@@ -57,23 +59,7 @@ function initialOf(value) {
   return String(value || '?').trim().charAt(0).toUpperCase() || '?'
 }
 
-/** "2026-09-26" + "09:57" -> Date lokal; null kalau tidak bisa diparse. */
-function parseEventMoment(ev) {
-  if (!ev?.date) return null
-  const time = String(ev.time || '00:00').slice(0, 5)
-  const moment = new Date(`${ev.date}T${time}`)
-  return Number.isNaN(moment.getTime()) ? null : moment
-}
-
-/** Momen acara paling awal (akad / resepsi) untuk tanggal cover dan countdown.
- * Diekspor supaya pratinjau (components/templates/InvitationPreview) memakai
- * perhitungan yang sama dengan halaman tamu. */
-export function eventMainMoment(eventData) {
-  const moments = [parseEventMoment(eventData?.akad), parseEventMoment(eventData?.resepsi)].filter(Boolean)
-  if (moments.length === 0) return null
-  return new Date(Math.min(...moments.map((moment) => moment.getTime())))
-}
-
+/** URL Google Maps untuk sebuah acara (pakai maps_url kalau ada). */
 function mapsUrlFor(ev) {
   if (ev?.maps_url) return ev.maps_url
   const query = [ev?.venue, ev?.address].filter(Boolean).join(', ')
@@ -207,7 +193,7 @@ export function Cover({ groom, bride, dateLabel, photo, guestName = '', onOpen }
           <button
             type="button"
             onClick={onOpen}
-            className="mt-12 inline-flex items-center gap-2 rounded-full bg-rose-600 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-600/25 transition hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+            className="ny-cta-pulse mt-12 inline-flex items-center gap-2 rounded-full bg-rose-600 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-600/25 transition hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
           >
             Buka Undangan
             <Icon name="chevronDown" className="h-4 w-4" />
@@ -223,7 +209,7 @@ export function Cover({ groom, bride, dateLabel, photo, guestName = '', onOpen }
   )
 }
 
-function CoupleCard({ person, role }) {
+function CoupleCard({ person, role, layout = 'split' }) {
   if (!person) return null
   const name = fullNameOf(person)
   const nick = nickOf(person)
@@ -233,58 +219,120 @@ function CoupleCard({ person, role }) {
   const instagram = String(person.instagram || '').replace(/^@/, '').trim()
   const isGroom = role === 'groom'
 
+  // Susunan isi kartu mengikuti layout template: `row` menaruh foto di samping
+  // teks (minimalis), selebihnya foto di atas tengah.
+  const cardShape =
+    layout === 'stack'
+      ? 'rounded-none border-l-2 border-l-rose-500 px-6 py-5 text-left sm:py-6'
+      : layout === 'circle'
+        ? 'rounded-full px-6 py-8'
+        : layout === 'tilted'
+          ? 'rounded-2xl px-6 py-7 shadow-md shadow-rose-900/10'
+          : layout === 'print'
+            ? 'rounded-none border-0 border-t border-t-rose-300 px-4 pt-6'
+            : 'rounded-3xl p-8'
+
+  // Avatar sejajar ke baris label (bukan tengah kartu): blok teks bisa
+  // multi-baris, jadi penjajaran tengah membuat foto terasa turun.
+  const inner = layout === 'stack' ? 'flex items-start gap-4' : ''
+  const roleSpacing = layout === 'stack' ? '' : 'mt-4'
+  const avatar =
+    layout === 'circle'
+      ? 'h-28 w-28 sm:h-32 sm:w-32'
+      : layout === 'stack'
+        ? 'h-16 w-16 shrink-0'
+        : 'h-24 w-24'
+
   return (
-    <div className="ny-card rounded-3xl border border-rose-100 bg-white p-8 text-center shadow-sm">
-      {person.photo ? (
-        <img
-          src={person.photo}
-          alt={isGroom ? 'Foto mempelai pria' : 'Foto mempelai wanita'}
-          loading="lazy"
-          className="mx-auto h-24 w-24 rounded-full object-cover shadow-sm ring-2 ring-rose-200"
-        />
-      ) : (
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-rose-50 font-display text-2xl italic text-rose-600 ring-1 ring-rose-200/80">
-          {initialOf(name || nick)}
+    <div
+      className={`ny-card border border-rose-100 bg-white text-center shadow-sm ${cardShape}`}
+    >
+      <div className={inner}>
+        {person.photo ? (
+          <img
+            src={person.photo}
+            alt={isGroom ? 'Foto mempelai pria' : 'Foto mempelai wanita'}
+            loading="lazy"
+            className={`ny-card-photo object-cover shadow-sm ring-2 ring-rose-200 ${
+              layout === 'stack' ? '' : 'mx-auto'
+            } rounded-full ${avatar}`}
+          />
+        ) : (
+          <div
+            className={`ny-card-photo flex items-center justify-center rounded-full bg-rose-50 font-display italic text-rose-600 ring-1 ring-rose-200/80 ${
+              layout === 'stack' ? '' : 'mx-auto'
+            } ${avatar} ${layout === 'circle' ? 'text-4xl' : 'text-2xl'}`}
+          >
+            {initialOf(name || nick)}
+          </div>
+        )}
+
+        <div className={layout === 'stack' ? 'min-w-0 flex-1' : ''}>
+          <p className={`${roleSpacing} text-xs font-medium tracking-wide text-rose-700`}>
+            {isGroom ? 'Mempelai Pria' : 'Mempelai Wanita'}
+          </p>
+          <h3 className="mt-1.5 font-display text-2xl text-slate-800">{name || nick}</h3>
+          {nick && name && nick !== name && (
+            <p className="mt-1 text-sm text-slate-500">akrab dipanggil {nick}</p>
+          )}
+          {parents.length > 0 && (
+            <p className="mt-3 text-sm leading-6 text-slate-500">
+              {isGroom ? 'Putra dari' : 'Putri dari'} {parents.join(' & ')}
+            </p>
+          )}
+          {instagram && (
+            <a
+              href={`https://instagram.com/${encodeURIComponent(instagram)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-rose-600 transition hover:text-rose-700"
+            >
+              <Icon name="instagram" />@{instagram}
+            </a>
+          )}
         </div>
-      )}
-      <p className="mt-4 text-xs font-medium tracking-wide text-rose-700">
-        {isGroom ? 'Mempelai Pria' : 'Mempelai Wanita'}
-      </p>
-      <h3 className="mt-1.5 font-display text-2xl text-slate-800">{name || nick}</h3>
-      {nick && name && nick !== name && (
-        <p className="mt-1 text-sm text-slate-500">akrab dipanggil {nick}</p>
-      )}
-      {parents.length > 0 && (
-        <p className="mt-3 text-sm leading-6 text-slate-500">
-          {isGroom ? 'Putra dari' : 'Putri dari'} {parents.join(' & ')}
-        </p>
-      )}
-      {instagram && (
-        <a
-          href={`https://instagram.com/${encodeURIComponent(instagram)}`}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-rose-600 transition hover:text-rose-700"
-        >
-          <Icon name="instagram" />
-          @{instagram}
-        </a>
-      )}
+      </div>
     </div>
   )
 }
 
-export function CoupleSection({ groom, bride }) {
+/*
+ * Susunan dua kartu mempelai. Template memilih lewat `layout`
+ * (katalog `coupleLayout` di invitationPayload.js):
+ *
+ *   split  - dua kartu berjejer dengan "&" di tengah (klasik, default)
+ *   stack  - bertumpuk penuh lebar, rata kiri (minimalis)
+ *   circle - foto bulat besar berhimpitan, "&" di tengah (floral)
+ *   tilted - kartu miring seperti tumpukan kertas di meja (ceria)
+ *   print  - dua kolom dipisah garis vertikal, tanpa "&" (krem)
+ */
+const COUPLE_CONTAINER = {
+  split: 'mx-auto mt-6 flex max-w-lg flex-col gap-4',
+  stack: 'mx-auto mt-6 flex max-w-lg flex-col gap-3 ny-couple-stack',
+  circle: 'mx-auto mt-6 flex max-w-lg flex-col gap-2 ny-couple-circle',
+  tilted: 'mx-auto mt-8 flex max-w-lg flex-col gap-6 ny-couple-tilted',
+  print: 'mx-auto mt-6 grid max-w-lg gap-6 sm:grid-cols-2 ny-couple-print',
+}
+
+export function CoupleSection({ groom, bride, layout = 'split' }) {
   if (!groom && !bride) return null
+  const container = COUPLE_CONTAINER[layout] ?? COUPLE_CONTAINER.split
+  const showAmpersand = layout !== 'print'
+
   return (
-    <section id="mempelai" className="px-5">
+    <section id="mempelai" data-couple-layout={layout} className="px-5">
       <SectionTitle>Kedua Mempelai</SectionTitle>
-      <div className="mx-auto mt-6 flex max-w-lg flex-col gap-4">
-        <CoupleCard person={groom} role="groom" />
-        <p className="text-center font-display text-3xl italic text-rose-400" aria-hidden="true">
-          &
-        </p>
-        <CoupleCard person={bride} role="bride" />
+      <div className={container}>
+        <CoupleCard person={groom} role="groom" layout={layout} />
+        {showAmpersand && (
+          <p
+            className="ny-couple-amp text-center font-display text-3xl italic text-rose-400"
+            aria-hidden="true"
+          >
+            &
+          </p>
+        )}
+        <CoupleCard person={bride} role="bride" layout={layout} />
       </div>
     </section>
   )
@@ -378,7 +426,9 @@ export function CountdownSection({ target }) {
                 ['Detik', countdown.seconds],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-2xl bg-white/10 py-3">
-                  <p className="font-display text-3xl tabular-nums">{String(value).padStart(2, '0')}</p>
+                  <p className="ny-count-value font-display text-3xl tabular-nums">
+                    {String(value).padStart(2, '0')}
+                  </p>
                   <p className="mt-1 text-[10px] font-medium tracking-wide text-rose-100">{label}</p>
                 </div>
               ))}
@@ -687,20 +737,11 @@ function RsvpForm({ slug, prefillName, onSent }) {
 }
 
 function GuestItem({ guest }) {
-  const attending = guest.rsvp_status === 'attending'
   return (
     <li className="rounded-2xl border border-rose-100 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <p className="truncate text-sm font-semibold text-slate-800">{guest.name}</p>
-        <span
-          className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${
-            attending
-              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-              : 'border-slate-200 bg-slate-50 text-slate-500'
-          }`}
-        >
-          {attending ? 'Hadir' : 'Berhalangan'}
-        </span>
+        <StatusBadge status={guest.rsvp_status} />
       </div>
       <p className="mt-0.5 text-xs text-slate-500">{timeAgo(guest.created_at)}</p>
       {guest.message && <p className="mt-2 text-sm leading-6 text-slate-600">{guest.message}</p>}
@@ -868,9 +909,13 @@ export default function PublicInvitation() {
 
   const reveal = template.reveal
 
+  // Varian bisa ditimp per section (katalog `revealBySection`), jadi dalam
+  // satu templateupun geraknya tidak seragam dari atas sampai bawah.
+  const revealFor = (key) => template.revealBySection?.[key] ?? reveal
+
   // Section yang sama, disusun ulang per template (lihat order di katalog).
   const sections = {
-    mempelai: <CoupleSection groom={groom} bride={bride} />,
+    mempelai: <CoupleSection groom={groom} bride={bride} layout={template.coupleLayout} />,
     cerita: <StorySection story={data?.bride_data?.story} />,
     acara: <EventsSection eventData={data?.event_data} />,
     countdown: <CountdownSection target={mainMoment} />,
@@ -902,6 +947,7 @@ export default function PublicInvitation() {
         coverPhoto={coverPhoto}
         guestName={guestName}
         mainMoment={mainMoment}
+        coupleLayout={template.coupleLayout}
         guestSection={<div className="el-guest">{sections.ucapan}</div>}
         onOpen={() => {
           setOpened(true)
@@ -924,7 +970,11 @@ export default function PublicInvitation() {
 
         <div className="space-y-14 py-14 sm:space-y-16">
           {template.order.map((key, index) => (
-            <Reveal key={key} variant={reveal} delay={index === 0 ? 0 : 60}>
+            <Reveal
+              key={key}
+              variant={revealFor(key)}
+              delay={index === 0 ? 0 : 60 + index * 40}
+            >
               {sections[key]}
             </Reveal>
           ))}

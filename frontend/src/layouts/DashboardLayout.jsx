@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { to: '/dashboard/undangan', label: 'Undangan Saya' },
   { to: '/dashboard/tamu', label: 'Daftar Tamu' },
   { to: '/dashboard/ucapan', label: 'Buku Ucapan' },
+  { to: '/dashboard/statistik', label: 'Statistik' },
   {
     to: '/dashboard/admin',
     label: 'Superadmin',

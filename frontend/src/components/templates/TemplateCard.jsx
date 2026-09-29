@@ -1,3 +1,5 @@
+import React from 'react'
+
 import { DEFAULT_TEMPLATE_NAME } from '../../lib/invitationPayload.js'
 
 /**
@@ -70,6 +72,33 @@ export function TemplateThumb({ template, className = '' }) {
 }
 
 /**
+ * Potongan layar asli template (hasil scripts/crop-thumbs.php).
+ *
+ * Gambar dipakai kalau berkasnya ada; bila tidak (template baru yang belum
+ * discreenshot) jatuh ke swatch warna supaya kartu tidak pernah kosong.
+ * `loading="lazy"` menghemat muatan landing: gambar baru diambil saat kartu
+ * mendekati layar, bukan sejak halaman dibuka.
+ */
+export function TemplatePhoto({ template, className = '' }) {
+  const [gagal, setGagal] = React.useState(false)
+
+  if (!template.thumb || gagal) {
+    return <TemplateThumb template={template} className={className} />
+  }
+
+  return (
+    <img
+      src={template.thumb}
+      alt={`Contoh tampilan template ${template.label}`}
+      loading="lazy"
+      decoding="async"
+      onError={() => setGagal(true)}
+      className={`${className} bg-white object-cover object-top`}
+    />
+  )
+}
+
+/**
  * Kartu template yang bisa dipilih (langkah 1 wizard). Klik badan kartu =
  * pilih; tombol "Lihat contoh" membuka pratinjau yang bisa digulir.
  */
@@ -89,7 +118,7 @@ export default function TemplateCard({ template, selected, onSelect, onPreview }
         onClick={onSelect}
         className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
       >
-        <TemplateThumb template={template} className="aspect-[4/5] w-full rounded-xl" />
+        <TemplatePhoto template={template} className="aspect-[4/5] w-full rounded-xl" />
         <span className="mt-3 flex items-center justify-between gap-2">
           <span className="text-sm font-semibold text-slate-900">{template.label}</span>
           <span className="flex gap-1" aria-hidden="true">
