@@ -22,7 +22,7 @@ $dir = __DIR__.'/../frontend/public/thumbs';
 $templates = ['klasik', 'minimalis', 'floral', 'ceria', 'elegan'];
 
 $lebar = 480;
-$tinggi = 640;   // 3:4 — lebih tinggi dari 4:5, tetapi tidak melonjong
+$tinggi = 480;   // 1:1 persegi — grid rapi dan tidak menjulur seperti 3:4
 $kualitas = 82;
 
 $totalMentah = 0;
@@ -55,7 +55,7 @@ foreach ($templates as $nama) {
     // Mengambil dari judul section membuat kartu mempelai kedua kepotong:
     // kartunya tinggi (foto + nama + panggilan + orang tua). Jadi potongan
     // digeser ke bawah melewati judul, langsung ke badan kartu.
-    $offsetY = (int) round($w * 0.26);
+    $offsetY = (int) round($w * 0.16);
     if ($offsetY + $potongH > $h) {
         $offsetY = max(0, $h - $potongH);
     }

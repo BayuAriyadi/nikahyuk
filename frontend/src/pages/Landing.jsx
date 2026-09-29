@@ -600,8 +600,9 @@ function TemplateGallery({ onPreview }) {
             Pilih tampilan yang paling kalian suka
           </h2>
           <p className="mt-4 text-base leading-7 text-slate-600">
-            Lima desain dengan warna, bentuk, dan susunan bagian yang berbeda. Buka contohnya untuk
-            melihat seluruh halaman undangan, dan ganti kapan saja tanpa biaya tambahan.
+            Ada {TEMPLATES.length} desain dengan warna, bentuk, dan susunan bagian yang berbeda.
+            Buka contohnya untuk melihat seluruh halaman undangan, dan ganti kapan saja tanpa
+            biaya tambahan.
           </p>
         </div>
 
@@ -616,7 +617,7 @@ function TemplateGallery({ onPreview }) {
               >
                 <TemplatePhoto
                   template={template}
-                  className="aspect-[3/4] w-full rounded-xl ring-1 ring-rose-100/80"
+                  className="aspect-square w-full rounded-xl ring-1 ring-rose-100/80"
                 />
                 <span className="block px-1.5 pt-3 pb-1">
                   <span className="block font-display text-lg text-slate-900">{template.label}</span>

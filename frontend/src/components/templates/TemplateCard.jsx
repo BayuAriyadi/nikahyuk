@@ -118,7 +118,7 @@ export default function TemplateCard({ template, selected, onSelect, onPreview }
         onClick={onSelect}
         className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
       >
-        <TemplatePhoto template={template} className="aspect-[3/4] w-full rounded-xl" />
+        <TemplatePhoto template={template} className="aspect-square w-full rounded-xl" />
         <span className="mt-3 flex items-center justify-between gap-2">
           <span className="text-sm font-semibold text-slate-900">{template.label}</span>
           <span className="flex gap-1" aria-hidden="true">
